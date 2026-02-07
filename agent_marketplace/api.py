@@ -16,15 +16,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
-from agent_marketplace.config import MCP_ENABLED, MCP_REGISTRY_PATH
+from agent_marketplace.config import MCP_ENABLED, MCP_REGISTRY_PATH, SMITHERY_ENABLED
 from agent_marketplace.graph import build_graph, set_payment_provider
-from agent_marketplace.mcp.registry import load_registry
+from agent_marketplace.mcp.registry import (
+    get_hardcoded_providers,
+    load_registry,
+)
+from agent_marketplace.smithery import discover_smithery_providers
 from agent_marketplace.payments.plasma import PlasmaEscrowProvider
 from agent_marketplace.state import MarketplaceState
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Agent Marketplace API")
+app = FastAPI(title="UpWork API")
 
 # In-memory job store: job_id -> asyncio.Queue
 _jobs: dict[str, asyncio.Queue] = {}
@@ -228,6 +232,81 @@ async def stream_job(job_id: str):
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.get("/api/providers")
+async def list_providers():
+    """Return all available providers (MCP + built-in) with status info."""
+    registry = load_registry(Path(MCP_REGISTRY_PATH)) if MCP_ENABLED else {}
+    warnings: list[str] = []
+    providers: list[dict] = []
+
+    # Discover MCP providers
+    if registry:
+        try:
+            from agent_marketplace.mcp.registry import discover_mcp_providers
+
+            mcp_providers, mcp_warnings = await discover_mcp_providers(registry)
+            warnings.extend(mcp_warnings)
+            for p in mcp_providers:
+                p.pop("agent", None)
+                p.pop("persona_hint", None)
+                p["status"] = "connected"
+                providers.append(p)
+
+            # Mark unreachable servers (in registry but not discovered)
+            discovered_keys = {p["server_key"] for p in mcp_providers}
+            for key, cfg in registry.items():
+                if key not in discovered_keys:
+                    providers.append({
+                        "name": cfg.get("name", key),
+                        "description": cfg.get("description", ""),
+                        "capabilities": cfg.get("capabilities", []),
+                        "source": "mcp",
+                        "server_key": key,
+                        "status": "unreachable",
+                    })
+        except Exception as exc:
+            logger.warning("MCP discovery failed: %s", exc)
+            warnings.append(f"[DISCOVERY] MCP discovery failed: {exc}")
+            # Include all registry entries as unreachable
+            for key, cfg in registry.items():
+                providers.append({
+                    "name": cfg.get("name", key),
+                    "description": cfg.get("description", ""),
+                    "capabilities": cfg.get("capabilities", []),
+                    "source": "mcp",
+                    "server_key": key,
+                    "status": "unreachable",
+                })
+
+    # Add hardcoded/built-in providers
+    for p in get_hardcoded_providers():
+        entry: dict[str, Any] = {
+            "name": p["name"],
+            "description": p["description"],
+            "capabilities": p["capabilities"],
+            "source": p["source"],
+            "server_key": p["server_key"],
+            "status": "built-in",
+        }
+        # Forward optional display fields
+        for key in ("icon_url", "verified", "use_count"):
+            if key in p:
+                entry[key] = p[key]
+        providers.append(entry)
+
+    # Discover Smithery registry providers
+    if SMITHERY_ENABLED:
+        try:
+            smithery_providers, smithery_warnings = await discover_smithery_providers()
+            warnings.extend(smithery_warnings)
+            providers.extend(smithery_providers)
+        except Exception as exc:
+            logger.warning("Smithery discovery failed: %s", exc)
+            warnings.append(f"[SMITHERY] Discovery failed: {exc}")
+
+    return {"providers": providers, "warnings": warnings}
 
 
 @app.get("/")

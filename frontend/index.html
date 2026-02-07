@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agent Task Marketplace</title>
+<title>UpWork</title>
 <script>
   (function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
 </script>
@@ -537,6 +537,68 @@ tbody tr.winner { background: var(--winner-bg); }
 .feed-tag.t-guard     { background: var(--bg-3); color: var(--text-3); }
 .feed-msg { color: var(--text-2); line-height: 1.4; }
 
+/* ============ PROVIDERS GRID ============ */
+.providers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.provider-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.provider-card:hover { border-color: var(--border-focus); box-shadow: var(--shadow-md); }
+.provider-card-header { display: flex; align-items: center; gap: 12px; }
+.provider-avatar {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: white; flex-shrink: 0;
+}
+.provider-avatar.src-mcp { background: var(--cyan); }
+.provider-avatar.src-local { background: #7c3aed; }
+.provider-card-name { font-size: 0.9rem; font-weight: 600; color: var(--text-0); }
+.provider-card-pills { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.provider-card-desc { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; }
+.provider-card-caps { display: flex; flex-wrap: wrap; gap: 6px; }
+.provider-card-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+.provider-server-key { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); }
+
+/* Smithery-specific */
+.provider-avatar.src-smithery { background: var(--amber); }
+.provider-avatar img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+}
+.verified-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.68rem; font-weight: 600; color: var(--green);
+}
+.verified-badge svg { width: 12px; height: 12px; }
+.use-count { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); }
+.pill-smithery { background: var(--amber-dim); color: var(--amber); }
+.provider-card-footer a {
+  color: var(--text-3); font-size: 0.72rem; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.provider-card-footer a:hover { color: var(--text-1); }
+.provider-card-footer a svg { width: 10px; height: 10px; }
+.providers-toolbar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.providers-toolbar .form-input { max-width: 300px; }
+.providers-toolbar .form-select { max-width: 160px; }
+.provider-count {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-3);
+  background: var(--bg-3); padding: 2px 8px; border-radius: 100px;
+  margin-left: 6px;
+}
+
 /* ============ VIEW STATES ============ */
 .view { display: none; }
 .view.visible { display: block; }
@@ -548,6 +610,7 @@ tbody tr.winner { background: var(--winner-bg); }
   .page-body { padding: 16px; }
   .two-col { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
+  .providers-grid { grid-template-columns: 1fr; }
   .pipeline-row { gap: 0; flex-wrap: nowrap; overflow-x: auto; }
   .pipeline-step { min-width: 60px; }
   .pipeline-line { min-width: 16px; }
@@ -560,7 +623,7 @@ tbody tr.winner { background: var(--winner-bg); }
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <h1>Agent Marketplace</h1>
+      <h1>UpWork</h1>
       <p>Outsource tasks your agent can't handle</p>
     </div>
 
@@ -574,7 +637,7 @@ tbody tr.winner { background: var(--winner-bg); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </div>
-      <div class="sidebar-item">
+      <div class="sidebar-item" onclick="showView('providers')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Providers
       </div>
@@ -706,6 +769,36 @@ tbody tr.winner { background: var(--winner-bg); }
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- ==================== PROVIDERS VIEW ==================== -->
+      <div class="view" id="view-providers">
+        <div class="section" style="animation-delay:.04s">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="display:flex;align-items:center">
+              <div style="font-size:1rem;font-weight:600">Available Providers</div>
+              <span class="provider-count" id="provider-count">0</span>
+            </div>
+            <button class="btn btn-ghost" onclick="loadProviders()" id="btn-refresh-providers">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="providers-toolbar">
+            <input class="form-input" type="text" id="provider-search" placeholder="Search providers..." oninput="filterProviders()">
+            <select class="form-select" id="provider-source-filter" onchange="filterProviders()">
+              <option value="all">All Sources</option>
+              <option value="local">Local</option>
+              <option value="mcp">MCP</option>
+              <option value="smithery">Smithery</option>
+            </select>
+          </div>
+          <div id="providers-loading" style="display:none;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite;margin-bottom:8px;display:inline-block"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+            <div>Discovering providers...</div>
+          </div>
+          <div id="providers-grid" class="providers-grid"></div>
         </div>
       </div>
 
@@ -861,12 +954,17 @@ function showView(name) {
   const items = document.querySelectorAll('.sidebar-item');
   if (name === 'launch') items[0].classList.add('active');
   else if (name === 'job') items[1].classList.add('active');
+  else if (name === 'providers') items[2].classList.add('active');
 
   const title = document.getElementById('page-title');
   const pill = document.getElementById('header-pill');
   if (name === 'launch') {
     title.textContent = 'New Job';
     pill.style.display = 'none';
+  } else if (name === 'providers') {
+    title.textContent = 'Providers';
+    pill.style.display = 'none';
+    loadProviders();
   } else {
     title.innerHTML = 'Job <span style="font-family:var(--mono);font-size:0.8rem;color:var(--text-2)">' + (_currentJobId || '') + '</span>';
     pill.style.display = 'none';
@@ -1289,6 +1387,158 @@ function parseFeedMessage(msg) {
   else tagClass = 't-provider';
 
   return { tag: rawTag, tagClass, text };
+}
+
+// ================================================================
+// Providers
+// ================================================================
+let _providersLoaded = false;
+let _allProviders = [];
+
+async function loadProviders() {
+  const grid = document.getElementById('providers-grid');
+  const loading = document.getElementById('providers-loading');
+  grid.innerHTML = '';
+  loading.style.display = 'block';
+
+  try {
+    const resp = await fetch(API_BASE + '/api/providers');
+    if (!resp.ok) throw new Error('Failed to fetch providers');
+    const data = await resp.json();
+
+    // Sort: local first, then mcp, then smithery (by use_count desc)
+    const sourceOrder = { local: 0, mcp: 1, smithery: 2 };
+    _allProviders = (data.providers || []).sort((a, b) => {
+      const sa = sourceOrder[a.source] ?? 99;
+      const sb = sourceOrder[b.source] ?? 99;
+      if (sa !== sb) return sa - sb;
+      // Within smithery, sort by use_count descending
+      if (a.source === 'smithery' && b.source === 'smithery') {
+        return (b.use_count || 0) - (a.use_count || 0);
+      }
+      return 0;
+    });
+
+    document.getElementById('provider-count').textContent = _allProviders.length;
+    filterProviders();
+    _providersLoaded = true;
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">Failed to load providers: ' + escapeHtml(e.message) + '</div>';
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function filterProviders() {
+  const query = (document.getElementById('provider-search').value || '').toLowerCase().trim();
+  const source = document.getElementById('provider-source-filter').value;
+
+  let filtered = _allProviders;
+  if (source !== 'all') {
+    filtered = filtered.filter(p => p.source === source);
+  }
+  if (query) {
+    filtered = filtered.filter(p =>
+      (p.name || '').toLowerCase().includes(query) ||
+      (p.description || '').toLowerCase().includes(query) ||
+      (p.qualified_name || '').toLowerCase().includes(query)
+    );
+  }
+  renderProviders(filtered);
+}
+
+function formatUseCount(n) {
+  if (n == null || n === 0) return '';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function renderProviders(list) {
+  const grid = document.getElementById('providers-grid');
+  grid.innerHTML = '';
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">No providers found</div>';
+    return;
+  }
+
+  list.forEach(p => {
+    const initials = (p.name || '?').split(/[\s\-_\/]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const isSmithery = p.source === 'smithery';
+    const avatarClass = isSmithery ? 'src-smithery' : (p.source === 'mcp' ? 'src-mcp' : 'src-local');
+
+    // Avatar content: use icon_url if available (any source)
+    let avatarContent = escapeHtml(initials);
+    if (p.icon_url) {
+      avatarContent = '<img src="' + escapeHtml(p.icon_url) + '" alt="" onerror="this.parentElement.textContent=\'' + escapeHtml(initials) + '\'">';
+    }
+
+    // Status pill
+    let statusPill = '';
+    if (p.status === 'connected') statusPill = '<span class="pill pill-green"><span class="pill-dot"></span> Connected</span>';
+    else if (p.status === 'built-in') statusPill = '<span class="pill pill-accent"><span class="pill-dot"></span> Built-in</span>';
+    else if (p.status === 'unreachable') statusPill = '<span class="pill pill-red"><span class="pill-dot"></span> Unreachable</span>';
+    else if (p.status === 'registry') statusPill = '<span class="pill pill-smithery"><span class="pill-dot"></span> Registry</span>';
+    else statusPill = '<span class="pill pill-muted">' + escapeHtml(p.status || 'Unknown') + '</span>';
+
+    // Source pill
+    let sourcePill = '';
+    if (p.source === 'mcp') sourcePill = '<span class="pill pill-cyan">MCP</span>';
+    else if (isSmithery) sourcePill = '<span class="pill pill-smithery">Smithery</span>';
+    else sourcePill = '<span class="pill pill-muted">Local</span>';
+
+    // Description — truncate long ones
+    let desc = p.description || 'No description available.';
+    if (desc.length > 200) desc = desc.slice(0, 200) + '...';
+
+    // Capability pills
+    const capHtml = (p.capabilities || []).map(c =>
+      '<span class="pill pill-muted">' + escapeHtml(c) + '</span>'
+    ).join('');
+
+    // Footer items
+    let footerItems = [];
+
+    // Server key (for non-Smithery)
+    if (!isSmithery && p.server_key) {
+      footerItems.push('<span class="provider-server-key">' + escapeHtml(p.server_key) + '</span>');
+    }
+
+    // Verified badge
+    if (p.verified) {
+      footerItems.push('<span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Verified</span>');
+    }
+
+    // Use count
+    const useStr = formatUseCount(p.use_count);
+    if (useStr) {
+      footerItems.push('<span class="use-count">' + useStr + ' uses</span>');
+    }
+
+    // Homepage link
+    if (isSmithery && p.homepage) {
+      footerItems.push('<a href="' + escapeHtml(p.homepage) + '" target="_blank" rel="noopener">smithery.ai <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>');
+    }
+
+    const footerHtml = footerItems.length > 0
+      ? '<div class="provider-card-footer">' + footerItems.join('<span style="flex:1"></span>') + '</div>'
+      : '';
+
+    const card = document.createElement('div');
+    card.className = 'provider-card';
+    card.innerHTML =
+      '<div class="provider-card-header">' +
+        '<div class="provider-avatar ' + avatarClass + '">' + avatarContent + '</div>' +
+        '<div class="provider-card-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="provider-card-pills">' + statusPill + sourcePill + '</div>' +
+      '</div>' +
+      '<div class="provider-card-desc">' + escapeHtml(desc) + '</div>' +
+      (capHtml ? '<div class="provider-card-caps">' + capHtml + '</div>' : '') +
+      footerHtml;
+
+    grid.appendChild(card);
+  });
 }
 
 // ================================================================

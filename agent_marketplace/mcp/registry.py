@@ -110,18 +110,25 @@ def _build_connection(server_key: str, cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def get_hardcoded_providers() -> list[dict[str, Any]]:
-    """Return descriptors for the two built-in providers (GPT-4 and Claude)."""
+    """Return descriptors for the two built-in providers (GPT-4o and Claude)."""
     return [
         {
-            "name": "GPT-4 Provider",
+            "name": "GPT-4o Reasoning",
             "capabilities": ["text", "browser", "shopping"],
-            "description": "Premium text analysis, summarization, and reasoning.",
+            "description": (
+                "Advanced multi-modal reasoning agent powered by OpenAI GPT-4o. "
+                "Handles complex text analysis, summarization, structured data extraction, "
+                "and multi-step task planning with high accuracy."
+            ),
             "server_key": None,
             "source": "local",
+            "icon_url": "https://cdn.oaistatic.com/assets/favicon-miwirzcw.ico",
+            "verified": True,
+            "use_count": 48200,
             "persona_hint": "You value quality and tend to price on the higher end of the allowed range.",
             "agent": BaseAgent(
                 persona=(
-                    "You are 'GPT-4 Provider', a specialized agent that offers capabilities "
+                    "You are 'GPT-4o Reasoning', a specialized agent that offers capabilities "
                     "other agents lack — premium text analysis, summarization, and reasoning. "
                     "Agents delegate to you when they need high-quality output they can't "
                     "produce themselves. You are confident and slightly premium-priced. Be concise."
@@ -129,15 +136,22 @@ def get_hardcoded_providers() -> list[dict[str, Any]]:
             ),
         },
         {
-            "name": "Claude Provider",
+            "name": "Claude Sonnet Agent",
             "capabilities": ["text", "browser", "shopping"],
-            "description": "Efficient text processing and cost-effective task execution.",
+            "description": (
+                "Fast and cost-efficient task execution agent powered by Anthropic Claude. "
+                "Specializes in browser automation, online shopping workflows, "
+                "and reliable text processing at competitive pricing."
+            ),
             "server_key": None,
             "source": "local",
+            "icon_url": "https://claude.ai/favicon.ico",
+            "verified": True,
+            "use_count": 35700,
             "persona_hint": "You are cost-effective and tend to undercut competitors with a lower price.",
             "agent": BaseAgent(
                 persona=(
-                    "You are 'Claude Provider', a specialized agent that offers capabilities "
+                    "You are 'Claude Sonnet Agent', a specialized agent that offers capabilities "
                     "other agents lack — browser automation, efficient text processing, and "
                     "cost-effective task execution. Agents delegate to you when they need "
                     "work done at a competitive price. You are friendly and affordable. Be concise."
