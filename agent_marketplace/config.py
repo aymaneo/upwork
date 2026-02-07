@@ -33,5 +33,9 @@ CHROME_USER_DATA_DIR: str = os.getenv(
 )
 CHROME_PROFILE_DIR: str = os.getenv("CHROME_PROFILE_DIR", "Default")
 
+# MCP
+MCP_REGISTRY_PATH: str = os.getenv("MCP_REGISTRY_PATH", "mcp_servers.json")
+MCP_ENABLED: bool = os.getenv("MCP_ENABLED", "true").lower() == "true"
+
 # Demo
 STEP_DELAY: float = float(os.getenv("STEP_DELAY", "1.5"))

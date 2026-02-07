@@ -13,8 +13,8 @@ from agent_marketplace.state import MarketplaceState
 
 def make_header() -> Panel:
     """Top banner for the marketplace."""
-    title = Text("AGENT COMPUTE MARKETPLACE", style="bold white on blue")
-    subtitle = Text("AI agents hiring & paying each other on Plasma", style="dim")
+    title = Text("AGENT TASK MARKETPLACE", style="bold white on blue")
+    subtitle = Text("Outsource tasks your agent can't handle — settled on-chain", style="dim")
     content = Text.assemble(title, "\n", subtitle)
     return Panel(Align.center(content), style="blue", height=5)
 
@@ -22,7 +22,7 @@ def make_header() -> Panel:
 def make_job_panel(state: MarketplaceState) -> Panel:
     """Panel showing the current job details."""
     desc = state.get("job_description", "No job posted yet")
-    budget = state.get("job_budget_usdc", 0)
+    budget = state.get("job_budget_xpl", 0)
     status = state.get("marketplace_status", "idle")
     job_type = state.get("job_type", "text")
 
@@ -39,7 +39,7 @@ def make_job_panel(state: MarketplaceState) -> Panel:
 
     content = (
         f"[bold]{desc}[/bold]\n\n"
-        f"Budget: [green]${budget:.4f} USDC[/green]\n"
+        f"Budget: [green]{budget:.4f} XPL[/green]\n"
         f"Type: [{type_color}]{job_type.upper()}[/{type_color}]\n"
         f"Status: [{color}]{status.upper()}[/{color}]"
     )
@@ -51,22 +51,25 @@ def make_bids_table(state: MarketplaceState) -> Panel:
     table = Table(show_header=True, header_style="bold cyan", expand=True)
     table.add_column("Provider", style="bold")
     table.add_column("Price", justify="right")
+    table.add_column("Source", justify="center")
     table.add_column("Status", justify="center")
 
     bids = state.get("bids", [])
     selected = state.get("selected_provider", "")
+    mcp_map = state.get("mcp_provider_map", {})
 
     for bid in bids:
         name = bid["provider_name"]
-        price = f"${bid['price_usdc']:.4f}"
+        price = f"{bid['price_xpl']:.4f} XPL"
+        source = "[cyan]MCP[/cyan]" if mcp_map.get(name) is not None else "[dim]LOCAL[/dim]"
         if name == selected:
             status = "[green]SELECTED[/green]"
         else:
             status = "[dim]outbid[/dim]"
-        table.add_row(name, price, status)
+        table.add_row(name, price, source, status)
 
     if not bids:
-        table.add_row("[dim]Waiting for bids...[/dim]", "", "")
+        table.add_row("[dim]Waiting for bids...[/dim]", "", "", "")
 
     return Panel(table, title="Bids", border_style="cyan")
 
@@ -100,8 +103,25 @@ def make_payment_panel(state: MarketplaceState) -> Panel:
     if judge_verdict:
         v_color = "green" if judge_verdict == "approved" else "red"
         lines.append(f"Judge: [{v_color}]{judge_verdict.upper()}[/{v_color}]")
+
+        judge_scores = state.get("judge_scores", {})
+        if judge_scores:
+            score_parts = []
+            for key in ("completeness", "relevance", "quality"):
+                score = judge_scores.get(key, 0.0)
+                if score >= 0.7:
+                    s_color = "green"
+                elif score >= 0.4:
+                    s_color = "yellow"
+                else:
+                    s_color = "red"
+                score_parts.append(f"  {key.title()}: [{s_color}]{score:.1f}[/{s_color}]")
+            lines.append("".join(score_parts))
+            avg = sum(judge_scores.get(k, 0.0) for k in ("completeness", "relevance", "quality")) / 3
+            lines.append(f"  Average: {avg:.2f}")
+
         if judge_reasoning:
-            lines.append(f"  {judge_reasoning}")
+            lines.append(f"  Reason: {judge_reasoning}")
 
     if payment_receipt and payment_receipt.get("tx_hash"):
         label = "Release TX" if escrow_status == "released" else "Refund TX"
@@ -109,7 +129,7 @@ def make_payment_panel(state: MarketplaceState) -> Panel:
             f"{label}: [bold]{payment_receipt['tx_hash']}[/bold]\n"
             f"From: {payment_receipt['from_addr']}\n"
             f"To: {payment_receipt['to_addr']}\n"
-            f"Amount: [green]${payment_receipt['amount_usdc']:.4f} USDC[/green]\n"
+            f"Amount: [green]{payment_receipt['amount_xpl']:.4f} XPL[/green]\n"
             f"Chain: {payment_receipt['chain']}"
         )
 
