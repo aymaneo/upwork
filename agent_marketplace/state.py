@@ -30,5 +30,6 @@ class MarketplaceState(TypedDict):
     payment_receipt: PaymentReceipt
     payment_status: str  # "pending" | "confirmed" | "failed"
     work_result: str
+    job_type: str  # "text" | "browser"
     marketplace_status: str  # "bidding" | "paying" | "delivering" | "complete" | "failed"
     events_log: Annotated[list[str], operator.add]

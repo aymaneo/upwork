@@ -29,5 +29,8 @@ PROVIDER_WALLET_ADDRESS: str = os.getenv("PROVIDER_WALLET_ADDRESS", "")
 PLASMA_RELAYER_URL: str = os.getenv("PLASMA_RELAYER_URL", "")
 PLASMA_RELAYER_API_KEY: str = os.getenv("PLASMA_RELAYER_API_KEY", "")
 
+# Browser
+BROWSER_HEADLESS: bool = os.getenv("BROWSER_HEADLESS", "true").lower() == "true"
+
 # Demo
 STEP_DELAY: float = float(os.getenv("STEP_DELAY", "1.5"))

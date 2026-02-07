@@ -65,6 +65,7 @@ def main() -> None:
         "payment_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
         "payment_status": "pending",
         "work_result": "",
+        "job_type": "text",
         "marketplace_status": "idle",
         "events_log": [],
     }

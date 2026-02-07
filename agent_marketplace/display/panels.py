@@ -24,6 +24,7 @@ def make_job_panel(state: MarketplaceState) -> Panel:
     desc = state.get("job_description", "No job posted yet")
     budget = state.get("job_budget_usdc", 0)
     status = state.get("marketplace_status", "idle")
+    job_type = state.get("job_type", "text")
 
     status_colors = {
         "bidding": "yellow",
@@ -33,10 +34,12 @@ def make_job_panel(state: MarketplaceState) -> Panel:
         "failed": "red",
     }
     color = status_colors.get(status, "white")
+    type_color = "cyan" if job_type == "browser" else "green"
 
     content = (
         f"[bold]{desc}[/bold]\n\n"
         f"Budget: [green]${budget:.4f} USDC[/green]\n"
+        f"Type: [{type_color}]{job_type.upper()}[/{type_color}]\n"
         f"Status: [{color}]{status.upper()}[/{color}]"
     )
     return Panel(content, title="Job", border_style="green")

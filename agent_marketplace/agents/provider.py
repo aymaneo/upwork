@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 from agent_marketplace.agents.base import BaseAgent
+from agent_marketplace.agents.browser_agent import run_browser_task
+from agent_marketplace.config import BROWSER_HEADLESS
 from agent_marketplace.state import Bid, MarketplaceState
 
 _gpt4_agent = BaseAgent(
@@ -127,13 +130,15 @@ def deliver_work_node(state: MarketplaceState) -> dict:
     provider = state["selected_provider"]
     desc = state["job_description"]
 
-    agent = _claude_agent if "Claude" in provider else _gpt4_agent
-
-    result = agent.think(
-        f"You won the job! The client is paying you to do this task:\n"
-        f"{desc}\n\n"
-        f"Deliver the work now. Provide a complete, high-quality response."
-    )
+    if state.get("job_type") == "browser":
+        result = asyncio.run(run_browser_task(desc, headless=BROWSER_HEADLESS))
+    else:
+        agent = _claude_agent if "Claude" in provider else _gpt4_agent
+        result = agent.think(
+            f"You won the job! The client is paying you to do this task:\n"
+            f"{desc}\n\n"
+            f"Deliver the work now. Provide a complete, high-quality response."
+        )
 
     return {
         "work_result": result,

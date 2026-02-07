@@ -26,10 +26,21 @@ def post_job_node(state: MarketplaceState) -> dict:
         f"Write a brief 1-2 sentence announcement for this job posting."
     )
 
+    # Classify whether this job needs a real browser
+    classification = _client_agent.think(
+        f"Does this job require browsing a real website or performing actions "
+        f"on the web (e.g. searching, filling forms, booking, buying)?\n"
+        f"Job: {desc}\n\n"
+        f"Respond with ONLY the word 'text' or 'browser'."
+    )
+    job_type = "browser" if "browser" in classification.strip().lower() else "text"
+
     return {
+        "job_type": job_type,
         "marketplace_status": "bidding",
         "events_log": [
             f"[CLIENT] Job posted: {desc} (budget: ${budget:.4f} USDC)",
+            f"[CLIENT] Job type: {job_type.upper()}",
             f"[CLIENT] {reasoning}",
         ],
     }
