@@ -31,6 +31,11 @@ PLASMA_RELAYER_API_KEY: str = os.getenv("PLASMA_RELAYER_API_KEY", "")
 
 # Browser
 BROWSER_HEADLESS: bool = os.getenv("BROWSER_HEADLESS", "true").lower() == "true"
+CHROME_USER_DATA_DIR: str = os.getenv(
+    "CHROME_USER_DATA_DIR",
+    os.path.expanduser("~/Library/Application Support/Google/Chrome"),
+)
+CHROME_PROFILE_DIR: str = os.getenv("CHROME_PROFILE_DIR", "Default")
 
 # Demo
 STEP_DELAY: float = float(os.getenv("STEP_DELAY", "1.5"))

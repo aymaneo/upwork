@@ -64,6 +64,10 @@ def main() -> None:
         "budget_valid": False,
         "payment_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
         "payment_status": "pending",
+        "escrow_status": "pending",
+        "escrow_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
+        "judge_verdict": "",
+        "judge_reasoning": "",
         "work_result": "",
         "job_type": "text",
         "marketplace_status": "idle",
@@ -103,14 +107,21 @@ def main() -> None:
 
     status = current_state.get("marketplace_status", "unknown")
     if status == "complete":
-        receipt = current_state.get("payment_receipt", {})
+        escrow_receipt = current_state.get("escrow_receipt", {})
+        payment_receipt = current_state.get("payment_receipt", {})
         console.print(f"[green]Provider:[/green] {current_state.get('selected_provider')}")
         console.print(f"[green]Price:[/green] ${current_state.get('selected_price', 0):.4f} USDC")
-        console.print(f"[green]TX Hash:[/green] {receipt.get('tx_hash', 'N/A')}")
-        console.print(f"[green]Chain:[/green] {receipt.get('chain', 'N/A')}")
+        console.print(f"[green]Escrow Hold TX:[/green] {escrow_receipt.get('tx_hash', 'N/A')}")
+        console.print(f"[green]Judge Verdict:[/green] {current_state.get('judge_verdict', 'N/A')}")
+        console.print(f"[green]Release TX:[/green] {payment_receipt.get('tx_hash', 'N/A')}")
+        console.print(f"[green]Chain:[/green] {payment_receipt.get('chain', 'N/A')}")
         console.print(f"\n[bold]Work Result:[/bold]")
         console.print(current_state.get("work_result", "No result"))
     else:
         console.print(f"[red]Status: {status}[/red]")
+        judge_verdict = current_state.get("judge_verdict", "")
+        if judge_verdict:
+            console.print(f"[red]Judge Verdict:[/red] {judge_verdict}")
+            console.print(f"[red]Reason:[/red] {current_state.get('judge_reasoning', '')}")
 
     console.print()

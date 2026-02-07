@@ -17,6 +17,7 @@ class MockPaymentProvider:
         "client-agent": 100.0,
         "provider-gpt4": 0.0,
         "provider-claude": 0.0,
+        "escrow-agent": 0.0,
     })
     transactions: list[PaymentReceipt] = field(default_factory=list)
 

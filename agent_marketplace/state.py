@@ -29,7 +29,11 @@ class MarketplaceState(TypedDict):
     budget_valid: bool
     payment_receipt: PaymentReceipt
     payment_status: str  # "pending" | "confirmed" | "failed"
+    escrow_status: str  # "pending" | "held" | "released" | "refunded"
+    escrow_receipt: PaymentReceipt
+    judge_verdict: str  # "approved" | "rejected"
+    judge_reasoning: str
     work_result: str
-    job_type: str  # "text" | "browser"
-    marketplace_status: str  # "bidding" | "paying" | "delivering" | "complete" | "failed"
+    job_type: str  # "text" | "browser" | "shopping"
+    marketplace_status: str  # "bidding" | "paying" | "delivering" | "judging" | "complete" | "failed"
     events_log: Annotated[list[str], operator.add]

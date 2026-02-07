@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from agent_marketplace.agents.base import BaseAgent
 from agent_marketplace.state import MarketplaceState
 
@@ -10,6 +12,14 @@ _client_agent = BaseAgent(
         "You are a client agent in an AI compute marketplace. "
         "You post jobs, evaluate bids from provider agents, and select "
         "the best provider based on price and quality. Be concise."
+    )
+)
+
+_judge_agent = BaseAgent(
+    persona=(
+        "You are an impartial quality judge in an AI compute marketplace. "
+        "You evaluate whether delivered work meets the job requirements. "
+        "You are fair but rigorous. Be concise."
     )
 )
 
@@ -26,14 +36,22 @@ def post_job_node(state: MarketplaceState) -> dict:
         f"Write a brief 1-2 sentence announcement for this job posting."
     )
 
-    # Classify whether this job needs a real browser
+    # Classify whether this job needs a real browser or is a shopping task
     classification = _client_agent.think(
-        f"Does this job require browsing a real website or performing actions "
-        f"on the web (e.g. searching, filling forms, booking, buying)?\n"
+        f"Classify this job into exactly one category:\n"
+        f"- 'shopping' = buying groceries or products from an online store\n"
+        f"- 'browser' = any other task requiring a real web browser\n"
+        f"- 'text' = pure text/analysis task, no browser needed\n\n"
         f"Job: {desc}\n\n"
-        f"Respond with ONLY the word 'text' or 'browser'."
+        f"Respond with ONLY one word: 'text', 'browser', or 'shopping'."
     )
-    job_type = "browser" if "browser" in classification.strip().lower() else "text"
+    raw = classification.strip().lower()
+    if "shopping" in raw:
+        job_type = "shopping"
+    elif "browser" in raw:
+        job_type = "browser"
+    else:
+        job_type = "text"
 
     return {
         "job_type": job_type,
@@ -81,5 +99,40 @@ def select_provider_node(state: MarketplaceState) -> dict:
             f"[CLIENT] Selected {chosen['provider_name']} "
             f"at ${chosen['price_usdc']:.4f} USDC",
             f"[CLIENT] {reasoning}",
+        ],
+    }
+
+
+def judge_work_node(state: MarketplaceState) -> dict:
+    """Judge evaluates delivered work quality."""
+    desc = state["job_description"]
+    result = state.get("work_result", "")
+
+    response = _judge_agent.think(
+        f"You are judging whether delivered work meets the job requirements.\n\n"
+        f"JOB DESCRIPTION:\n{desc}\n\n"
+        f"DELIVERED WORK:\n{result[:2000]}\n\n"
+        f"Evaluate completeness, relevance, and quality.\n"
+        f"Respond with ONLY valid JSON (no markdown, no extra text):\n"
+        f'{{"verdict": "approved" or "rejected", "reasoning": "<1-2 sentence explanation>"}}'
+    )
+
+    try:
+        data = json.loads(response)
+        verdict = data.get("verdict", "approved").lower()
+        reasoning = data.get("reasoning", "")
+        if verdict not in ("approved", "rejected"):
+            verdict = "approved"
+    except (json.JSONDecodeError, AttributeError):
+        verdict = "approved"
+        reasoning = "Judge parse failed — defaulting to approved."
+
+    return {
+        "judge_verdict": verdict,
+        "judge_reasoning": reasoning,
+        "marketplace_status": "judging",
+        "events_log": [
+            f"[JUDGE] Verdict: {verdict.upper()}",
+            f"[JUDGE] {reasoning}",
         ],
     }

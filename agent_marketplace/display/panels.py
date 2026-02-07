@@ -34,7 +34,8 @@ def make_job_panel(state: MarketplaceState) -> Panel:
         "failed": "red",
     }
     color = status_colors.get(status, "white")
-    type_color = "cyan" if job_type == "browser" else "green"
+    type_colors = {"browser": "cyan", "shopping": "yellow", "text": "green"}
+    type_color = type_colors.get(job_type, "green")
 
     content = (
         f"[bold]{desc}[/bold]\n\n"
@@ -71,37 +72,63 @@ def make_bids_table(state: MarketplaceState) -> Panel:
 
 
 def make_payment_panel(state: MarketplaceState) -> Panel:
-    """Panel showing payment receipt."""
-    receipt = state.get("payment_receipt")
-    pay_status = state.get("payment_status", "pending")
+    """Panel showing escrow lifecycle."""
+    escrow_status = state.get("escrow_status", "pending")
+    escrow_receipt = state.get("escrow_receipt")
+    payment_receipt = state.get("payment_receipt")
+    judge_verdict = state.get("judge_verdict", "")
+    judge_reasoning = state.get("judge_reasoning", "")
 
-    if receipt:
-        content = (
-            f"TX: [bold]{receipt['tx_hash']}[/bold]\n"
-            f"From: {receipt['from_addr']}\n"
-            f"To: {receipt['to_addr']}\n"
-            f"Amount: [green]${receipt['amount_usdc']:.4f} USDC[/green]\n"
-            f"Chain: {receipt['chain']}\n"
-            f"Status: [green]{pay_status.upper()}[/green]"
+    escrow_colors = {
+        "pending": "dim",
+        "held": "yellow",
+        "released": "green",
+        "refunded": "red",
+    }
+    escrow_color = escrow_colors.get(escrow_status, "white")
+
+    lines = [f"Escrow: [{escrow_color}]{escrow_status.upper()}[/{escrow_color}]"]
+
+    if escrow_receipt and escrow_receipt.get("tx_hash"):
+        lines.append(f"Hold TX: [bold]{escrow_receipt['tx_hash']}[/bold]")
+
+    if judge_verdict:
+        v_color = "green" if judge_verdict == "approved" else "red"
+        lines.append(f"Judge: [{v_color}]{judge_verdict.upper()}[/{v_color}]")
+        if judge_reasoning:
+            lines.append(f"  {judge_reasoning}")
+
+    if payment_receipt and payment_receipt.get("tx_hash"):
+        label = "Release TX" if escrow_status == "released" else "Refund TX"
+        lines.append(
+            f"{label}: [bold]{payment_receipt['tx_hash']}[/bold]\n"
+            f"From: {payment_receipt['from_addr']}\n"
+            f"To: {payment_receipt['to_addr']}\n"
+            f"Amount: [green]${payment_receipt['amount_usdc']:.4f} USDC[/green]\n"
+            f"Chain: {payment_receipt['chain']}"
         )
-    else:
-        content = f"[dim]Status: {pay_status}[/dim]"
 
-    return Panel(content, title="Payment", border_style="yellow")
+    content = "\n".join(lines)
+    return Panel(content, title="Escrow & Payment", border_style="yellow")
 
 
 def make_work_panel(state: MarketplaceState) -> Panel:
     """Panel showing delivered work result."""
     result = state.get("work_result", "")
+    job_type = state.get("job_type", "text")
+    is_shopping = job_type == "shopping"
+    max_len = 1200 if is_shopping else 500
+    panel_title = "Shopping Cart" if is_shopping else "Work Result"
+
     if result:
         # Truncate for display
-        if len(result) > 500:
-            result = result[:500] + "..."
+        if len(result) > max_len:
+            result = result[:max_len] + "..."
         content = result
     else:
         content = "[dim]Awaiting delivery...[/dim]"
 
-    return Panel(content, title="Work Result", border_style="magenta")
+    return Panel(content, title=panel_title, border_style="magenta")
 
 
 def make_activity_feed(state: MarketplaceState) -> Panel:
@@ -134,7 +161,7 @@ def build_layout(state: MarketplaceState) -> Layout:
     )
 
     layout["right"].split_column(
-        Layout(name="payment", size=10),
+        Layout(name="payment", size=12),
         Layout(name="work", ratio=1),
     )
 

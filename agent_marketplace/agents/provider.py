@@ -6,7 +6,7 @@ import asyncio
 import json
 
 from agent_marketplace.agents.base import BaseAgent
-from agent_marketplace.agents.browser_agent import run_browser_task
+from agent_marketplace.agents.browser_agent import GroceryCart, run_browser_task
 from agent_marketplace.config import BROWSER_HEADLESS
 from agent_marketplace.state import Bid, MarketplaceState
 
@@ -125,12 +125,31 @@ def close_bidding_node(state: MarketplaceState) -> dict:
     }
 
 
+def _build_shopping_prompt(grocery_request: str) -> str:
+    return (
+        f'Search for "{grocery_request}" on Instacart at the nearest store.\n\n'
+        f"You will buy all of the items at the same store.\n"
+        f"For each item:\n"
+        f"1. Search for the item\n"
+        f"2. Find the best match (closest name, lowest price)\n"
+        f"3. Add the item to the cart\n\n"
+        f"Do NOT proceed to checkout.\n\n"
+        f"Site: https://www.instacart.com/"
+    )
+
+
 def deliver_work_node(state: MarketplaceState) -> dict:
     """Selected provider delivers the work."""
     provider = state["selected_provider"]
     desc = state["job_description"]
 
-    if state.get("job_type") == "browser":
+    job_type = state.get("job_type")
+    if job_type == "shopping":
+        prompt = _build_shopping_prompt(desc)
+        result = asyncio.run(
+            run_browser_task(prompt, headless=BROWSER_HEADLESS, output_model=GroceryCart)
+        )
+    elif job_type == "browser":
         result = asyncio.run(run_browser_task(desc, headless=BROWSER_HEADLESS))
     else:
         agent = _claude_agent if "Claude" in provider else _gpt4_agent
@@ -142,7 +161,7 @@ def deliver_work_node(state: MarketplaceState) -> dict:
 
     return {
         "work_result": result,
-        "marketplace_status": "complete",
+        "marketplace_status": "judging",
         "events_log": [
             f"[{provider.upper()}] Work delivered successfully.",
         ],
