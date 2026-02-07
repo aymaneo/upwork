@@ -308,6 +308,41 @@ thead th, tbody td, .kv-grid, .kv-item,
   100% { left: 100%; }
 }
 
+/* Phase spotlight */
+#phase-spotlight {
+  background: var(--bg-1);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 24px var(--accent-dim);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadein 0.35s ease forwards;
+}
+.spotlight-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.spotlight-phase-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.spotlight-phase-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; }
+.spotlight-phase-title { font-size: 0.92rem; font-weight: 600; color: var(--text-0); }
+.spotlight-phase-status { margin-left: auto; }
+
+.spotlight-body .kv-grid { box-shadow: none; }
+.spotlight-body .table-wrap { box-shadow: none; }
+.spotlight-body .scores-wrap { box-shadow: none; }
+.spotlight-body .spinner-row {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 24px 0; color: var(--text-3); font-size: 0.85rem;
+}
+
 /* Pipeline status bar */
 .pipeline-status {
   display: flex;
@@ -848,6 +883,9 @@ tbody tr.winner { background: var(--winner-bg); }
           </div>
         </div>
 
+        <!-- Phase Spotlight (dynamic) -->
+        <div id="phase-spotlight" style="display:none"></div>
+
         <!-- Job Details -->
         <div class="section" style="animation-delay:.06s">
           <div class="section-label">Job Details</div>
@@ -1047,6 +1085,10 @@ function resetJobView() {
   document.querySelectorAll('#pipeline-job .pipeline-line').forEach(l => l.classList.remove('done', 'active'));
   document.getElementById('pipeline-job-status').innerHTML = '<span class="pipeline-status-text">Waiting for events...</span>';
 
+  // Spotlight
+  document.getElementById('phase-spotlight').style.display = 'none';
+  _spotlightPhase = '';
+
   // KV
   document.getElementById('kv-price').textContent = '\u2014';
   document.getElementById('escrow-id').textContent = '\u2014';
@@ -1141,6 +1183,9 @@ function handleStateUpdate(node, state) {
 
   // --- Pipeline ---
   updatePipeline(state.marketplace_status || 'idle');
+
+  // --- Phase spotlight ---
+  updateSpotlight(state.marketplace_status || 'idle', state);
 
   // --- Job details KV ---
   if (state.job_description) document.getElementById('kv-desc').textContent = state.job_description;
@@ -1289,6 +1334,122 @@ function updatePipeline(status) {
   } else {
     statusBar.innerHTML = '<span class="pipeline-status-text">' + (statusLabels[status] || status) + '</span>';
   }
+}
+
+// ================================================================
+// Phase spotlight
+// ================================================================
+let _spotlightPhase = '';
+
+function updateSpotlight(status, state) {
+  const el = document.getElementById('phase-spotlight');
+
+  // Hide for idle / terminal states
+  if (!status || status === 'idle' || status === 'complete' || status === 'failed') {
+    el.style.display = 'none';
+    _spotlightPhase = '';
+    return;
+  }
+
+  let icon, title, body;
+
+  switch (status) {
+    case 'bidding': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>';
+      title = 'Collecting Bids';
+      const bids = state.bids || [];
+      if (bids.length === 0) {
+        body = '<div class="spinner-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><div>Waiting for providers to submit bids...</div></div>';
+      } else {
+        let rows = '';
+        bids.forEach((bid, i) => {
+          const name = bid.provider_name || 'Unknown';
+          const init = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+          const cls = ['avatar-ba','avatar-cl','avatar-g4'][i % 3];
+          const selected = name === state.selected_provider;
+          rows += '<tr' + (selected ? ' class="winner"' : '') + '>' +
+            '<td><div class="provider-cell"><div class="avatar ' + cls + '">' + escapeHtml(init) + '</div> ' + escapeHtml(name) + '</div></td>' +
+            '<td><span class="mono-cell">' + bid.price_xpl.toFixed(4) + ' XPL</span></td>' +
+            '<td><span class="pill pill-muted">' + escapeHtml(bid.source || 'Local') + '</span></td>' +
+            '<td>' + (selected
+              ? '<span class="status-winner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Selected</span>'
+              : '<span class="status-outbid">' + (state.selected_provider ? 'Outbid' : 'Bidding') + '</span>') +
+            '</td></tr>';
+        });
+        body = '<div class="table-wrap"><table><thead><tr><th>Provider</th><th>Price</th><th>Source</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      }
+      break;
+    }
+    case 'paying': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>';
+      title = 'Processing Payment';
+      const eid = state.escrow_id || '';
+      const eidStr = eid ? (eid.length > 16 ? eid.slice(0,10) + '\u2026' + eid.slice(-8) : eid) : '\u2014';
+      const amt = state.selected_price > 0 ? state.selected_price.toFixed(4) + ' XPL' : '\u2014';
+      const htx = (state.escrow_receipt && state.escrow_receipt.tx_hash) || '';
+      const htxStr = htx ? (htx.length > 16 ? htx.slice(0,8) + '\u2026' + htx.slice(-8) : htx) : '\u2014';
+      body = '<div class="kv-grid" style="grid-template-columns:1fr 1fr 1fr">' +
+        '<div class="kv-item"><div class="kv-label">Escrow ID</div><div class="kv-value mono">' + escapeHtml(eidStr) + '</div></div>' +
+        '<div class="kv-item"><div class="kv-label">Amount</div><div class="kv-value mono green">' + escapeHtml(amt) + '</div></div>' +
+        '<div class="kv-item"><div class="kv-label">Hold TX</div><div class="kv-value mono">' + escapeHtml(htxStr) + '</div></div>' +
+        '</div>';
+      break;
+    }
+    case 'delivering': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      title = 'Work in Progress';
+      if (state.work_result) {
+        const raw = typeof state.work_result === 'string' ? state.work_result : JSON.stringify(state.work_result);
+        const preview = raw.replace(/\s*\[Simple judge:[^\]]*\]\s*$/g, '').trim().slice(0, 300);
+        body = '<div style="padding:8px 0;font-size:0.85rem;color:var(--text-1);white-space:pre-wrap;line-height:1.6">' + escapeHtml(preview) + (raw.length > 300 ? '\u2026' : '') + '</div>';
+      } else {
+        body = '<div class="spinner-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><div>Provider is executing the task...</div></div>';
+      }
+      break;
+    }
+    case 'judging': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+      title = 'Evaluating Quality';
+      const scores = state.judge_scores || {};
+      const verdict = state.judge_verdict || '';
+      let vpill = '<span class="pill pill-muted">Pending</span>';
+      if (verdict === 'approved') vpill = '<span class="pill pill-green">Approved</span>';
+      else if (verdict === 'rejected') vpill = '<span class="pill pill-red">Rejected</span>';
+
+      let bars = '';
+      ['completeness','relevance','quality'].forEach(k => {
+        const v = scores[k];
+        const pct = v != null ? Math.round(v * 100) : 0;
+        const val = v != null ? v.toFixed(1) : '\u2014';
+        bars += '<div class="score-row"><span class="score-name">' + k.charAt(0).toUpperCase() + k.slice(1) + '</span>' +
+          '<div class="bar-track"><div class="bar-fill' + (v != null ? ' go' : '') + '" style="--w:' + pct + '%"></div></div>' +
+          '<span class="score-val">' + val + '</span></div>';
+      });
+
+      body = '<div class="scores-wrap"><div class="scores-header"><span class="scores-title">Quality Rubric</span>' + vpill + '</div><div class="scores-body">' + bars + '</div></div>';
+      break;
+    }
+    default:
+      el.style.display = 'none';
+      _spotlightPhase = '';
+      return;
+  }
+
+  // Re-trigger animation when phase changes
+  if (_spotlightPhase !== status) {
+    el.style.display = 'none';
+    el.offsetHeight; // force reflow
+    _spotlightPhase = status;
+  }
+
+  el.style.display = '';
+  el.innerHTML =
+    '<div class="spotlight-header">' +
+      '<div class="spotlight-phase-icon">' + icon + '</div>' +
+      '<div class="spotlight-phase-title">' + title + '</div>' +
+      '<div class="spotlight-phase-status"><span class="pill pill-accent"><span class="pill-dot" style="animation:blink 2.5s ease-in-out infinite"></span> Active</span></div>' +
+    '</div>' +
+    '<div class="spotlight-body">' + body + '</div>';
 }
 
 // ================================================================
