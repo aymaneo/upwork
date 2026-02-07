@@ -89,6 +89,11 @@ def make_payment_panel(state: MarketplaceState) -> Panel:
 
     lines = [f"Escrow: [{escrow_color}]{escrow_status.upper()}[/{escrow_color}]"]
 
+    escrow_id = state.get("escrow_id", "")
+    if escrow_id:
+        truncated = escrow_id[:18] + "..." if len(escrow_id) > 18 else escrow_id
+        lines.append(f"Escrow ID: [bold]{truncated}[/bold]")
+
     if escrow_receipt and escrow_receipt.get("tx_hash"):
         lines.append(f"Hold TX: [bold]{escrow_receipt['tx_hash']}[/bold]")
 

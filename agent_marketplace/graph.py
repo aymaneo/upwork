@@ -15,60 +15,52 @@ from agent_marketplace.agents.provider import (
     close_bidding_node,
     deliver_work_node,
 )
-from agent_marketplace.config import PAYMENT_MODE
+from agent_marketplace.config import PROVIDER_WALLET_ADDRESS
 from agent_marketplace.guardrails.validators import (
     budget_is_valid,
     validate_budget_node,
 )
-from agent_marketplace.payments.mock import MockPaymentProvider
+from agent_marketplace.payments.plasma import PlasmaEscrowProvider
 from agent_marketplace.state import MarketplaceState
 
-# Shared payment provider instance (replaced at runtime for Plasma mode)
-_payment_provider = MockPaymentProvider()
+# Shared payment provider instance (set at runtime via set_payment_provider)
+_payment_provider: PlasmaEscrowProvider | None = None
 
 
-def set_payment_provider(provider: MockPaymentProvider) -> None:
+def set_payment_provider(provider: PlasmaEscrowProvider) -> None:
     global _payment_provider
     _payment_provider = provider
 
 
 def escrow_hold_node(state: MarketplaceState) -> dict:
-    """Hold funds in escrow before work begins."""
+    """Deposit funds into the on-chain escrow contract."""
     provider = state["selected_provider"]
     price = state["selected_price"]
 
-    if PAYMENT_MODE == "plasma":
-        # Plasma mode: conceptual hold only — no on-chain tx yet.
-        return {
-            "escrow_status": "held",
-            "marketplace_status": "delivering",
-            "events_log": [
-                f"[ESCROW] Conceptual hold of ${price:.4f} USDC for {provider}",
-                f"[ESCROW] Funds remain in client wallet until judge approves.",
-            ],
-        }
-
-    # Mock mode: actual transfer client → escrow-agent
     try:
-        receipt = _payment_provider.transfer(
-            from_addr="client-agent",
-            to_addr="escrow-agent",
-            amount_usdc=price,
+        escrow_id = _payment_provider.generate_escrow_id(
+            state["job_description"], PROVIDER_WALLET_ADDRESS
         )
+        receipt = _payment_provider.deposit(
+            escrow_id, PROVIDER_WALLET_ADDRESS, price
+        )
+        escrow_id_hex = "0x" + escrow_id.hex()
         return {
+            "escrow_id": escrow_id_hex,
             "escrow_status": "held",
             "escrow_receipt": receipt,
             "marketplace_status": "delivering",
             "events_log": [
-                f"[ESCROW] Held ${price:.4f} USDC in escrow for {provider}",
-                f"[ESCROW] Hold TX: {receipt['tx_hash']} on {receipt['chain']}",
+                f"[ESCROW] Deposited {price:.4f} XPL into contract for {provider}",
+                f"[ESCROW] Escrow ID: {escrow_id_hex[:18]}...",
+                f"[ESCROW] Deposit TX: {receipt['tx_hash']} on {receipt['chain']}",
             ],
         }
     except Exception as e:
         return {
             "escrow_status": "failed",
             "marketplace_status": "failed",
-            "events_log": [f"[ESCROW] Hold FAILED: {e}"],
+            "events_log": [f"[ESCROW] Deposit FAILED: {e}"],
         }
 
 
@@ -90,48 +82,19 @@ def escrow_release_node(state: MarketplaceState) -> dict:
     """Release escrowed funds to the provider after judge approval."""
     provider = state["selected_provider"]
     price = state["selected_price"]
-    to_addr = provider.lower().replace(" ", "-")
+    escrow_id_hex = state["escrow_id"]
+    escrow_id = bytes.fromhex(escrow_id_hex[2:])
 
-    if PAYMENT_MODE == "plasma":
-        # Plasma mode: this is the actual on-chain transfer.
-        try:
-            receipt = _payment_provider.transfer(
-                from_addr="client-agent",
-                to_addr=to_addr,
-                amount_usdc=price,
-            )
-            return {
-                "escrow_status": "released",
-                "payment_receipt": receipt,
-                "payment_status": "confirmed",
-                "marketplace_status": "complete",
-                "events_log": [
-                    f"[ESCROW] Released ${price:.4f} USDC to {provider}",
-                    f"[ESCROW] TX: {receipt['tx_hash']} on {receipt['chain']}",
-                ],
-            }
-        except Exception as e:
-            return {
-                "payment_status": "failed",
-                "marketplace_status": "failed",
-                "events_log": [f"[ESCROW] Release FAILED: {e}"],
-            }
-
-    # Mock mode: transfer escrow-agent → provider
     try:
-        receipt = _payment_provider.transfer(
-            from_addr="escrow-agent",
-            to_addr=to_addr,
-            amount_usdc=price,
-        )
+        receipt = _payment_provider.release(escrow_id)
         return {
             "escrow_status": "released",
             "payment_receipt": receipt,
             "payment_status": "confirmed",
             "marketplace_status": "complete",
             "events_log": [
-                f"[ESCROW] Released ${price:.4f} USDC to {provider}",
-                f"[ESCROW] TX: {receipt['tx_hash']} on {receipt['chain']}",
+                f"[ESCROW] Released {price:.4f} XPL to {provider}",
+                f"[ESCROW] Release TX: {receipt['tx_hash']} on {receipt['chain']}",
             ],
         }
     except Exception as e:
@@ -145,29 +108,17 @@ def escrow_release_node(state: MarketplaceState) -> dict:
 def escrow_refund_node(state: MarketplaceState) -> dict:
     """Refund escrowed funds to the client after judge rejection."""
     price = state["selected_price"]
+    escrow_id_hex = state["escrow_id"]
+    escrow_id = bytes.fromhex(escrow_id_hex[2:])
 
-    if PAYMENT_MODE == "plasma":
-        # Plasma mode: no-op — funds never left the client wallet.
-        return {
-            "escrow_status": "refunded",
-            "marketplace_status": "failed",
-            "events_log": [
-                f"[ESCROW] Refund: ${price:.4f} USDC — funds never left client wallet.",
-            ],
-        }
-
-    # Mock mode: transfer escrow-agent → client-agent
     try:
-        receipt = _payment_provider.transfer(
-            from_addr="escrow-agent",
-            to_addr="client-agent",
-            amount_usdc=price,
-        )
+        receipt = _payment_provider.refund(escrow_id)
         return {
             "escrow_status": "refunded",
+            "payment_receipt": receipt,
             "marketplace_status": "failed",
             "events_log": [
-                f"[ESCROW] Refunded ${price:.4f} USDC to client",
+                f"[ESCROW] Refunded {price:.4f} XPL to client",
                 f"[ESCROW] Refund TX: {receipt['tx_hash']} on {receipt['chain']}",
             ],
         }

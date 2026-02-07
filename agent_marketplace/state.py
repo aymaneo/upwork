@@ -29,6 +29,7 @@ class MarketplaceState(TypedDict):
     budget_valid: bool
     payment_receipt: PaymentReceipt
     payment_status: str  # "pending" | "confirmed" | "failed"
+    escrow_id: str  # hex-encoded bytes32, e.g. "0xabc..."
     escrow_status: str  # "pending" | "held" | "released" | "refunded"
     escrow_receipt: PaymentReceipt
     judge_verdict: str  # "approved" | "rejected"

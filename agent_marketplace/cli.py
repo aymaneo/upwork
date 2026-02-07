@@ -8,27 +8,18 @@ from rich.console import Console
 from rich.live import Live
 from rich.prompt import Prompt, FloatPrompt
 
-from agent_marketplace.config import PAYMENT_MODE, STEP_DELAY
+from agent_marketplace.config import STEP_DELAY
 from agent_marketplace.display.panels import build_layout
 from agent_marketplace.graph import build_graph, set_payment_provider
-from agent_marketplace.payments.mock import MockPaymentProvider
+from agent_marketplace.payments.plasma import PlasmaEscrowProvider
 from agent_marketplace.state import MarketplaceState
 
 console = Console()
 
 
-def _get_payment_provider() -> MockPaymentProvider:
-    """Return the appropriate payment provider based on config."""
-    if PAYMENT_MODE == "plasma":
-        try:
-            from agent_marketplace.payments.plasma import PlasmaPaymentProvider
-
-            return PlasmaPaymentProvider()
-        except Exception as e:
-            console.print(
-                f"[yellow]Warning: Plasma init failed ({e}), falling back to mock[/yellow]"
-            )
-    return MockPaymentProvider()
+def _get_payment_provider() -> PlasmaEscrowProvider:
+    """Return the Plasma escrow payment provider."""
+    return PlasmaEscrowProvider()
 
 
 def main() -> None:
@@ -64,6 +55,7 @@ def main() -> None:
         "budget_valid": False,
         "payment_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
         "payment_status": "pending",
+        "escrow_id": "",
         "escrow_status": "pending",
         "escrow_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
         "judge_verdict": "",
@@ -77,9 +69,10 @@ def main() -> None:
     # Merge updates from stream into running state
     current_state: dict = dict(initial_state)
 
-    console.print(f"[green]Payment mode:[/green] {PAYMENT_MODE}")
+    console.print(f"[green]Network:[/green] Plasma Testnet")
+    console.print(f"[green]Contract:[/green] {provider.contract_address}")
     console.print(f"[green]Job:[/green] {initial_state['job_description']}")
-    console.print(f"[green]Budget:[/green] ${initial_state['job_budget_usdc']:.4f} USDC")
+    console.print(f"[green]Budget:[/green] {initial_state['job_budget_usdc']:.4f} XPL")
     console.print()
 
     with Live(build_layout(current_state), console=console, screen=True, refresh_per_second=4) as live:
@@ -110,7 +103,8 @@ def main() -> None:
         escrow_receipt = current_state.get("escrow_receipt", {})
         payment_receipt = current_state.get("payment_receipt", {})
         console.print(f"[green]Provider:[/green] {current_state.get('selected_provider')}")
-        console.print(f"[green]Price:[/green] ${current_state.get('selected_price', 0):.4f} USDC")
+        console.print(f"[green]Price:[/green] {current_state.get('selected_price', 0):.4f} XPL")
+        console.print(f"[green]Escrow ID:[/green] {current_state.get('escrow_id', 'N/A')}")
         console.print(f"[green]Escrow Hold TX:[/green] {escrow_receipt.get('tx_hash', 'N/A')}")
         console.print(f"[green]Judge Verdict:[/green] {current_state.get('judge_verdict', 'N/A')}")
         console.print(f"[green]Release TX:[/green] {payment_receipt.get('tx_hash', 'N/A')}")
