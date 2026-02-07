@@ -32,7 +32,7 @@ def execute_payment_node(state: MarketplaceState) -> dict:
     provider = state["selected_provider"]
     price = state["selected_price"]
 
-    to_addr = "provider-claude" if "Claude" in provider else "provider-gpt4"
+    to_addr = provider.lower().replace(" ", "-")
 
     try:
         receipt = _payment_provider.transfer(
@@ -44,7 +44,7 @@ def execute_payment_node(state: MarketplaceState) -> dict:
             "payment_receipt": receipt,
             "payment_status": "confirmed",
             "events_log": [
-                f"[PAYMENT] Sent ${price:.2f} USDC to {provider}",
+                f"[PAYMENT] Sent ${price:.4f} USDC to {provider}",
                 f"[PAYMENT] TX: {receipt['tx_hash']} on {receipt['chain']}",
             ],
         }

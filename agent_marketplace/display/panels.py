@@ -36,7 +36,7 @@ def make_job_panel(state: MarketplaceState) -> Panel:
 
     content = (
         f"[bold]{desc}[/bold]\n\n"
-        f"Budget: [green]${budget:.2f} USDC[/green]\n"
+        f"Budget: [green]${budget:.4f} USDC[/green]\n"
         f"Status: [{color}]{status.upper()}[/{color}]"
     )
     return Panel(content, title="Job", border_style="green")
@@ -54,7 +54,7 @@ def make_bids_table(state: MarketplaceState) -> Panel:
 
     for bid in bids:
         name = bid["provider_name"]
-        price = f"${bid['price_usdc']:.2f}"
+        price = f"${bid['price_usdc']:.4f}"
         if name == selected:
             status = "[green]SELECTED[/green]"
         else:
@@ -77,7 +77,7 @@ def make_payment_panel(state: MarketplaceState) -> Panel:
             f"TX: [bold]{receipt['tx_hash']}[/bold]\n"
             f"From: {receipt['from_addr']}\n"
             f"To: {receipt['to_addr']}\n"
-            f"Amount: [green]${receipt['amount_usdc']:.2f} USDC[/green]\n"
+            f"Amount: [green]${receipt['amount_usdc']:.4f} USDC[/green]\n"
             f"Chain: {receipt['chain']}\n"
             f"Status: [green]{pay_status.upper()}[/green]"
         )

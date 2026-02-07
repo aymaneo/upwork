@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from agent_marketplace.agents.base import BaseAgent
 from agent_marketplace.state import Bid, MarketplaceState
 
@@ -22,29 +24,61 @@ _claude_agent = BaseAgent(
 )
 
 
+def _parse_bid(response: str, budget: float) -> tuple[float, str]:
+    """Extract price and reasoning from an LLM JSON response."""
+    try:
+        data = json.loads(response)
+        price = float(data["price"])
+        reasoning = data.get("reasoning", "")
+    except (json.JSONDecodeError, KeyError, ValueError, TypeError):
+        # Fallback: use half the budget
+        price = round(budget * 0.5, 4)
+        reasoning = response
+    # Clamp to 90% of budget
+    price = min(price, round(budget * 0.9, 6))
+    return price, reasoning
+
+
+def _bid_prompt(desc: str, budget: float, persona_hint: str) -> str:
+    max_bid = round(budget * 0.9, 6)
+    return (
+        f"A client posted a job on the marketplace:\n"
+        f"Job: {desc}\n"
+        f"Budget: ${budget} USDC\n\n"
+        f"RULES:\n"
+        f"- You MUST bid strictly LESS than the budget.\n"
+        f"- Your price must be between $0 and ${max_bid} USDC (max 90% of budget).\n"
+        f"- {persona_hint}\n\n"
+        f"Respond with ONLY valid JSON (no markdown, no extra text):\n"
+        f'{{"price": <your bid as a number>, "reasoning": "<1-2 sentence pitch>"}}'
+    )
+
+
 def bid_gpt4_node(state: MarketplaceState) -> dict:
     """GPT-4 provider submits a bid."""
     desc = state["job_description"]
     budget = state["job_budget_usdc"]
 
-    reasoning = _gpt4_agent.think(
-        f"A client posted a job on the marketplace:\n"
-        f"Job: {desc}\n"
-        f"Budget: ${budget:.2f} USDC\n\n"
-        f"You want to bid $0.005 for this job. "
-        f"Write a 1-2 sentence pitch for why the client should pick you."
+    response = _gpt4_agent.think(
+        _bid_prompt(
+            desc,
+            budget,
+            "You value quality and tend to price on the higher end of the allowed range.",
+        )
     )
+
+    price, reasoning = _parse_bid(response, budget)
 
     bid: Bid = {
         "provider_name": "GPT-4 Provider",
-        "price_usdc": 0.005,
+        "price_usdc": price,
         "reasoning": reasoning,
     }
 
     return {
         "bids": [bid],
         "events_log": [
-            f"[GPT-4 PROVIDER] Bid: $0.005 USDC",
+            f"[GPT-4 PROVIDER] Bid: ${price} USDC",
             f"[GPT-4 PROVIDER] {reasoning}",
         ],
     }
@@ -55,24 +89,26 @@ def bid_claude_node(state: MarketplaceState) -> dict:
     desc = state["job_description"]
     budget = state["job_budget_usdc"]
 
-    reasoning = _claude_agent.think(
-        f"A client posted a job on the marketplace:\n"
-        f"Job: {desc}\n"
-        f"Budget: ${budget:.2f} USDC\n\n"
-        f"You want to bid $0.003 for this job. "
-        f"Write a 1-2 sentence pitch for why the client should pick you."
+    response = _claude_agent.think(
+        _bid_prompt(
+            desc,
+            budget,
+            "You are cost-effective and tend to undercut competitors with a lower price.",
+        )
     )
+
+    price, reasoning = _parse_bid(response, budget)
 
     bid: Bid = {
         "provider_name": "Claude Provider",
-        "price_usdc": 0.003,
+        "price_usdc": price,
         "reasoning": reasoning,
     }
 
     return {
         "bids": [bid],
         "events_log": [
-            f"[CLAUDE PROVIDER] Bid: $0.003 USDC",
+            f"[CLAUDE PROVIDER] Bid: ${price} USDC",
             f"[CLAUDE PROVIDER] {reasoning}",
         ],
     }

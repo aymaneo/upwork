@@ -6,6 +6,7 @@ import time
 
 from rich.console import Console
 from rich.live import Live
+from rich.prompt import Prompt, FloatPrompt
 
 from agent_marketplace.config import PAYMENT_MODE, STEP_DELAY
 from agent_marketplace.display.panels import build_layout
@@ -42,10 +43,21 @@ def main() -> None:
     graph = build_graph()
     app = graph.compile()
 
+    # Prompt user for job details
+    job_description = Prompt.ask(
+        "[bold cyan]Describe the job for agents[/bold cyan]",
+        default="Summarize the key innovations of Plasma blockchain in 3 bullet points",
+    )
+    job_budget_usdc = FloatPrompt.ask(
+        "[bold cyan]Budget in XPL[/bold cyan]",
+        default=0.01,
+    )
+    console.print()
+
     # Initial state
     initial_state: MarketplaceState = {
-        "job_description": "Summarize the key innovations of Plasma blockchain in 3 bullet points",
-        "job_budget_usdc": 0.01,
+        "job_description": job_description,
+        "job_budget_usdc": job_budget_usdc,
         "bids": [],
         "selected_provider": "",
         "selected_price": 0.0,
@@ -62,7 +74,7 @@ def main() -> None:
 
     console.print(f"[green]Payment mode:[/green] {PAYMENT_MODE}")
     console.print(f"[green]Job:[/green] {initial_state['job_description']}")
-    console.print(f"[green]Budget:[/green] ${initial_state['job_budget_usdc']:.2f} USDC")
+    console.print(f"[green]Budget:[/green] ${initial_state['job_budget_usdc']:.4f} USDC")
     console.print()
 
     with Live(build_layout(current_state), console=console, screen=True, refresh_per_second=4) as live:
@@ -92,7 +104,7 @@ def main() -> None:
     if status == "complete":
         receipt = current_state.get("payment_receipt", {})
         console.print(f"[green]Provider:[/green] {current_state.get('selected_provider')}")
-        console.print(f"[green]Price:[/green] ${current_state.get('selected_price', 0):.2f} USDC")
+        console.print(f"[green]Price:[/green] ${current_state.get('selected_price', 0):.4f} USDC")
         console.print(f"[green]TX Hash:[/green] {receipt.get('tx_hash', 'N/A')}")
         console.print(f"[green]Chain:[/green] {receipt.get('chain', 'N/A')}")
         console.print(f"\n[bold]Work Result:[/bold]")

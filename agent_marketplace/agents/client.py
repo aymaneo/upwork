@@ -22,14 +22,14 @@ def post_job_node(state: MarketplaceState) -> dict:
     reasoning = _client_agent.think(
         f"You are posting a job on the AI agent marketplace.\n"
         f"Job: {desc}\n"
-        f"Budget: ${budget:.2f} USDC\n\n"
+        f"Budget: ${budget:.4f} USDC\n\n"
         f"Write a brief 1-2 sentence announcement for this job posting."
     )
 
     return {
         "marketplace_status": "bidding",
         "events_log": [
-            f"[CLIENT] Job posted: {desc} (budget: ${budget:.2f} USDC)",
+            f"[CLIENT] Job posted: {desc} (budget: ${budget:.4f} USDC)",
             f"[CLIENT] {reasoning}",
         ],
     }
@@ -41,12 +41,12 @@ def select_provider_node(state: MarketplaceState) -> dict:
     budget = state["job_budget_usdc"]
 
     bids_text = "\n".join(
-        f"- {b['provider_name']}: ${b['price_usdc']:.2f} — {b['reasoning']}"
+        f"- {b['provider_name']}: ${b['price_usdc']:.4f} — {b['reasoning']}"
         for b in bids
     )
 
     reasoning = _client_agent.think(
-        f"You received these bids for your job (budget ${budget:.2f}):\n"
+        f"You received these bids for your job (budget ${budget:.4f}):\n"
         f"{bids_text}\n\n"
         f"Select the cheapest bid that's within budget. "
         f"State which provider you choose and why in 1-2 sentences."
@@ -68,7 +68,7 @@ def select_provider_node(state: MarketplaceState) -> dict:
         "marketplace_status": "paying",
         "events_log": [
             f"[CLIENT] Selected {chosen['provider_name']} "
-            f"at ${chosen['price_usdc']:.2f} USDC",
+            f"at ${chosen['price_usdc']:.4f} USDC",
             f"[CLIENT] {reasoning}",
         ],
     }
