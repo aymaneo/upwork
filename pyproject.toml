@@ -20,10 +20,13 @@ dependencies = [
     "browser-use>=0.11.0",
     "mcp>=1.2.0",
     "langchain-mcp-adapters>=0.1.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
 ]
 
 [project.scripts]
 agent-marketplace = "agent_marketplace.cli:main"
+marketplace-api = "agent_marketplace.api:main"
 mcp-browser-agent = "agent_marketplace.mcp.server:main"
 
 [tool.setuptools.packages.find]
