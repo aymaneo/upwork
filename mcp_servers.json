@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "browser-agent": {
+      "transport": "stdio",
+      "command": "python3",
+      "args": ["-m", "agent_marketplace.mcp.server"],
+      "enabled": true
+    }
+  }
+}

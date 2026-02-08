@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UpWork</title>
+<script>
+  (function(){var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+/* ====== DARK ====== */
+[data-theme="dark"] {
+  --bg-0: #0a0a0b;
+  --bg-1: #111113;
+  --bg-2: #17171a;
+  --bg-3: #1e1e22;
+  --bg-surface: #141416;
+  --bg-hover: #1c1c20;
+  --bg-input: #0e0e10;
+
+  --border: rgba(255,255,255,0.06);
+  --border-focus: rgba(94,106,210,0.5);
+
+  --text-0: #ededef;
+  --text-1: #c4c4cc;
+  --text-2: #8b8b96;
+  --text-3: #5c5c66;
+
+  --accent: #5e6ad2;
+  --accent-hover: #6e7ae0;
+  --accent-dim: rgba(94,106,210,0.1);
+  --accent-text: #b4baf5;
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.08);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.08);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.08);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.08);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --check-stroke: white;
+  --winner-bg: rgba(94,106,210,0.04);
+  --pipeline-track: rgba(255,255,255,0.04);
+  --pipeline-fill: var(--accent);
+}
+
+/* ====== LIGHT ====== */
+[data-theme="light"] {
+  --bg-0: #f7f7f9;
+  --bg-1: #ffffff;
+  --bg-2: #f0f0f3;
+  --bg-3: #e4e4e9;
+  --bg-surface: #f4f4f7;
+  --bg-hover: #ededf0;
+  --bg-input: #ffffff;
+
+  --border: rgba(0,0,0,0.07);
+  --border-focus: rgba(94,106,210,0.5);
+
+  --text-0: #1a1a1f;
+  --text-1: #3d3d45;
+  --text-2: #6b6b76;
+  --text-3: #9b9ba5;
+
+  --accent: #5e6ad2;
+  --accent-hover: #4e5abc;
+  --accent-dim: rgba(94,106,210,0.07);
+  --accent-text: #4e5abc;
+  --green: #16a34a;
+  --green-dim: rgba(22,163,74,0.06);
+  --amber: #d97706;
+  --amber-dim: rgba(217,119,6,0.06);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.06);
+  --cyan: #0891b2;
+  --cyan-dim: rgba(8,145,178,0.06);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.02);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --check-stroke: white;
+  --winner-bg: rgba(94,106,210,0.04);
+  --pipeline-track: rgba(0,0,0,0.04);
+  --pipeline-fill: var(--accent);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 14px; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font); background: var(--bg-0); color: var(--text-0); line-height: 1.5; }
+
+/* Smooth transitions */
+body, .sidebar, .content, .page-header,
+.card, .pipeline-hero, .table-wrap, .scores-wrap,
+.cart-wrap, .feed-wrap, .form-card,
+thead th, tbody td, .kv-grid, .kv-item,
+.pill, .sidebar-item, .sidebar-status, .sidebar-brand,
+.theme-toggle, input, textarea, select {
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+/* ============ LAYOUT ============ */
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+
+/* ============ SIDEBAR ============ */
+.sidebar {
+  background: var(--bg-0);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.sidebar-brand { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.sidebar-brand h1 { font-size: 0.9rem; font-weight: 600; letter-spacing: -0.02em; }
+.sidebar-brand p { font-size: 0.72rem; color: var(--text-3); line-height: 1.4; }
+
+.sidebar-section { padding: 0 8px; margin-bottom: 16px; }
+.sidebar-section-label {
+  font-size: 0.68rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-3); padding: 0 12px; margin-bottom: 4px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; border-radius: 6px; font-size: 0.82rem;
+  color: var(--text-2); cursor: pointer;
+}
+.sidebar-item:hover { background: var(--bg-hover); color: var(--text-1); }
+.sidebar-item.active { background: var(--accent-dim); color: var(--accent-text); }
+.sidebar-item svg { width: 15px; height: 15px; opacity: 0.5; flex-shrink: 0; }
+.sidebar-item.active svg { opacity: 0.8; }
+
+.sidebar-status { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+.sidebar-status-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; margin-bottom: 6px; }
+.sidebar-status-row:last-child { margin-bottom: 0; }
+.sidebar-status-label { color: var(--text-3); }
+.sidebar-status-value { color: var(--text-2); font-family: var(--mono); font-size: 0.72rem; }
+.sidebar-status-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green); margin-right: 5px; animation: blink 2.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{ opacity:1 } 50%{ opacity:0.3 } }
+
+/* ============ MAIN CONTENT ============ */
+.content { padding: 0; overflow-y: auto; }
+
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; border-bottom: 1px solid var(--border);
+  background: var(--bg-0); position: sticky; top: 0; z-index: 10;
+}
+.page-header h2 { font-size: 0.95rem; font-weight: 600; letter-spacing: -0.01em; }
+.page-header-meta { display: flex; align-items: center; gap: 10px; }
+
+.page-body { padding: 24px 32px 48px; }
+
+/* ============ PILLS ============ */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 100px; font-size: 0.7rem; font-weight: 500;
+}
+.pill-green { background: var(--green-dim); color: var(--green); }
+.pill-amber { background: var(--amber-dim); color: var(--amber); }
+.pill-cyan { background: var(--cyan-dim); color: var(--cyan); }
+.pill-red { background: var(--red-dim); color: var(--red); }
+.pill-muted { background: var(--bg-3); color: var(--text-3); }
+.pill-accent { background: var(--accent-dim); color: var(--accent-text); }
+.pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* ============ THEME TOGGLE ============ */
+.theme-toggle {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 100px;
+  border: 1px solid var(--border); background: var(--bg-surface);
+  cursor: pointer; font-size: 0.75rem; font-weight: 500;
+  color: var(--text-2); font-family: var(--font);
+}
+.theme-toggle:hover { background: var(--bg-hover); border-color: var(--border-focus); color: var(--text-1); }
+.theme-toggle svg { width: 14px; height: 14px; flex-shrink: 0; }
+.theme-toggle .icon-sun, .theme-toggle .label-light { display: none; }
+.theme-toggle .icon-moon, .theme-toggle .label-dark { display: inline; }
+[data-theme="dark"] .theme-toggle .icon-sun, [data-theme="dark"] .theme-toggle .label-light { display: inline; }
+[data-theme="dark"] .theme-toggle .icon-moon, [data-theme="dark"] .theme-toggle .label-dark { display: none; }
+
+/* ============ SECTIONS ============ */
+.section { margin-bottom: 28px; opacity: 0; transform: translateY(6px); animation: fadein 0.35s ease forwards; }
+.section:nth-child(1) { animation-delay: 0.04s; }
+.section:nth-child(2) { animation-delay: 0.08s; }
+.section:nth-child(3) { animation-delay: 0.12s; }
+.section:nth-child(4) { animation-delay: 0.16s; }
+.section:nth-child(5) { animation-delay: 0.20s; }
+.section:nth-child(6) { animation-delay: 0.24s; }
+.section:nth-child(7) { animation-delay: 0.28s; }
+@keyframes fadein { to { opacity: 1; transform: translateY(0); } }
+
+.section-label {
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ========================================================
+   PIPELINE — THE HERO
+   ======================================================== */
+.pipeline-hero {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.pipeline-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.pipeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+  min-width: 80px;
+}
+
+.pipeline-icon {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-3);
+  background: var(--bg-surface);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.pipeline-icon svg { width: 18px; height: 18px; stroke: var(--text-3); fill: none; stroke-width: 1.8; }
+
+.pipeline-step-label {
+  font-size: 0.78rem; font-weight: 500; color: var(--text-3);
+  text-align: center;
+}
+
+/* States */
+.pipeline-step.done .pipeline-icon {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.pipeline-step.done .pipeline-icon svg { stroke: white; }
+.pipeline-step.done .pipeline-step-label { color: var(--text-1); }
+
+.pipeline-step.active .pipeline-icon {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+.pipeline-step.active .pipeline-icon svg { stroke: var(--accent); }
+.pipeline-step.active .pipeline-step-label { color: var(--accent); font-weight: 600; }
+
+@keyframes pulse-ring {
+  0%,100% { box-shadow: 0 0 0 0 rgba(94,106,210,0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(94,106,210,0); }
+}
+
+.pipeline-step.failed .pipeline-icon {
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+.pipeline-step.failed .pipeline-icon svg { stroke: var(--red); }
+.pipeline-step.failed .pipeline-step-label { color: var(--red); }
+
+.pipeline-line {
+  flex: 1;
+  height: 2px;
+  background: var(--pipeline-track);
+  margin: 0 0 30px 0;
+  min-width: 28px;
+  max-width: 80px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1px;
+}
+.pipeline-line.done { background: var(--accent); opacity: 0.4; }
+.pipeline-line.active::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; height: 100%; width: 40%;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: line-progress 1.5s ease-in-out infinite;
+}
+@keyframes line-progress {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* Phase spotlight */
+#phase-spotlight {
+  background: var(--bg-1);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 0 24px var(--accent-dim);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadein 0.35s ease forwards;
+}
+.spotlight-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.spotlight-phase-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent-dim);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.spotlight-phase-icon svg { width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; }
+.spotlight-phase-title { font-size: 0.92rem; font-weight: 600; color: var(--text-0); }
+.spotlight-phase-status { margin-left: auto; }
+
+.spotlight-body .kv-grid { box-shadow: none; }
+.spotlight-body .table-wrap { box-shadow: none; }
+.spotlight-body .scores-wrap { box-shadow: none; }
+.spotlight-body .spinner-row {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; padding: 24px 0; color: var(--text-3); font-size: 0.85rem;
+}
+
+/* Pipeline status bar */
+.pipeline-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.pipeline-status-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+/* ========================================================
+   JOB LAUNCH FORM
+   ======================================================== */
+.form-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  box-shadow: var(--shadow-sm);
+}
+.form-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.form-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-3);
+  margin-bottom: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-label {
+  font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--text-3);
+}
+
+.form-input, .form-textarea, .form-select {
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text-0);
+  font-family: var(--font);
+  font-size: 0.88rem;
+  outline: none;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--text-3);
+}
+.form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8b96' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+
+.form-row-inline {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  margin-top: 6px;
+}
+.form-row-inline .form-group { flex: 1; }
+
+.form-suffix {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.form-suffix .form-input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+.form-suffix-label {
+  padding: 9px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-3);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: var(--radius);
+  border: none;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.btn:active { transform: scale(0.98); }
+.btn svg { width: 16px; height: 16px; }
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 1px 3px rgba(94,106,210,0.3);
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--bg-hover); color: var(--text-1); }
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ============ KV GRID ============ */
+.kv-grid {
+  display: grid; gap: 0;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.kv-item { padding: 14px 18px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+.kv-label { font-size: 0.68rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 4px; }
+.kv-value { font-size: 0.88rem; font-weight: 500; color: var(--text-0); }
+.kv-value.mono { font-family: var(--mono); font-size: 0.78rem; color: var(--text-2); }
+.kv-value.green { color: var(--green); }
+
+/* ============ TABLE ============ */
+.table-wrap { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: left; padding: 10px 16px; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+thead th:not(:first-child) { text-align: center; }
+tbody td { padding: 11px 16px; font-size: 0.85rem; border-bottom: 1px solid var(--border); color: var(--text-1); }
+tbody td:not(:first-child) { text-align: center; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg-hover); }
+tbody tr.winner { background: var(--winner-bg); }
+
+.provider-cell { display: flex; align-items: center; gap: 10px; font-weight: 500; color: var(--text-0); }
+.avatar { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.62rem; font-weight: 700; color: white !important; flex-shrink: 0; }
+.avatar-ba { background: var(--accent); }
+.avatar-cl { background: var(--amber); }
+.avatar-g4 { background: #7c3aed; }
+.mono-cell { font-family: var(--mono); font-size: 0.8rem; color: var(--text-2); }
+.status-winner { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 500; color: var(--green); }
+.status-winner svg { width: 13px; height: 13px; }
+.status-outbid { font-size: 0.75rem; color: var(--text-3); }
+
+/* ============ SCORES ============ */
+.scores-wrap { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+.scores-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--bg-surface); border-bottom: 1px solid var(--border); }
+.scores-title { font-size: 0.78rem; font-weight: 500; color: var(--text-2); }
+.scores-body { padding: 16px 18px; }
+.score-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+.score-row:last-child { margin-bottom: 0; }
+.score-name { width: 100px; font-size: 0.78rem; color: var(--text-2); }
+.bar-track { flex: 1; height: 4px; border-radius: 2px; background: var(--bg-3); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; background: var(--green); width: 0; transition: width 0.8s cubic-bezier(0.22,1,0.36,1); }
+.bar-fill.go { width: var(--w); }
+.score-val { width: 28px; text-align: right; font-family: var(--mono); font-size: 0.75rem; color: var(--text-2); }
+
+/* ============ CART ============ */
+.cart-wrap { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
+.cart-row { display: flex; align-items: center; gap: 14px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.cart-row:last-child { border-bottom: none; }
+.cart-icon { width: 34px; height: 34px; border-radius: 6px; background: var(--bg-3); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+.cart-info { flex: 1; }
+.cart-name { font-size: 0.85rem; font-weight: 500; color: var(--text-0); }
+.cart-detail { font-size: 0.72rem; color: var(--text-3); }
+.cart-price { font-family: var(--mono); font-size: 0.85rem; font-weight: 500; color: var(--text-1); }
+.cart-total { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--bg-surface); border-top: 1px solid var(--border); }
+.cart-total-label { font-size: 0.78rem; font-weight: 500; color: var(--text-2); }
+.cart-total-value { font-family: var(--mono); font-size: 0.92rem; font-weight: 600; color: var(--text-0); }
+
+/* ============ TWO COL ============ */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ============ FEED ============ */
+.feed-wrap { background: var(--bg-1); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; max-height: 300px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--bg-3) transparent; box-shadow: var(--shadow-sm); }
+.feed-wrap::-webkit-scrollbar { width: 3px; }
+.feed-wrap::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 2px; }
+.feed-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px; border-bottom: 1px solid var(--border); font-size: 0.78rem; opacity: 0; animation: feedin 0.25s ease forwards; }
+.feed-item:last-child { border-bottom: none; }
+@keyframes feedin { from { opacity: 0; } to { opacity: 1; } }
+
+.feed-time { font-family: var(--mono); font-size: 0.68rem; color: var(--text-3); white-space: nowrap; padding-top: 1px; min-width: 48px; }
+.feed-tag { font-family: var(--mono); font-size: 0.65rem; font-weight: 600; padding: 1px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.feed-tag.t-client    { background: var(--accent-dim); color: var(--accent-text); }
+.feed-tag.t-discovery { background: var(--accent-dim); color: var(--accent); }
+.feed-tag.t-provider  { background: var(--cyan-dim); color: var(--cyan); }
+.feed-tag.t-escrow    { background: var(--amber-dim); color: var(--amber); }
+.feed-tag.t-judge     { background: var(--green-dim); color: var(--green); }
+.feed-tag.t-guard     { background: var(--bg-3); color: var(--text-3); }
+.feed-msg { color: var(--text-2); line-height: 1.4; }
+
+/* ============ PROVIDERS GRID ============ */
+.providers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.provider-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.provider-card:hover { border-color: var(--border-focus); box-shadow: var(--shadow-md); }
+.provider-card-header { display: flex; align-items: center; gap: 12px; }
+.provider-avatar {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: white; flex-shrink: 0;
+}
+.provider-avatar.src-mcp { background: var(--cyan); }
+.provider-avatar.src-local { background: #7c3aed; }
+.provider-card-name { font-size: 0.9rem; font-weight: 600; color: var(--text-0); }
+.provider-card-pills { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
+.provider-card-desc { font-size: 0.8rem; color: var(--text-2); line-height: 1.5; }
+.provider-card-caps { display: flex; flex-wrap: wrap; gap: 6px; }
+.provider-card-footer { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+.provider-server-key { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); }
+
+/* Smithery-specific */
+.provider-avatar.src-smithery { background: var(--amber); }
+.provider-avatar img {
+  width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+}
+.verified-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.68rem; font-weight: 600; color: var(--green);
+}
+.verified-badge svg { width: 12px; height: 12px; }
+.use-count { font-family: var(--mono); font-size: 0.72rem; color: var(--text-3); }
+.pill-smithery { background: var(--amber-dim); color: var(--amber); }
+.provider-card-footer a {
+  color: var(--text-3); font-size: 0.72rem; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+.provider-card-footer a:hover { color: var(--text-1); }
+.provider-card-footer a svg { width: 10px; height: 10px; }
+.providers-toolbar {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.providers-toolbar .form-input { max-width: 300px; }
+.providers-toolbar .form-select { max-width: 160px; }
+.provider-count {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--text-3);
+  background: var(--bg-3); padding: 2px 8px; border-radius: 100px;
+  margin-left: 6px;
+}
+
+/* ============ VIEW STATES ============ */
+.view { display: none; }
+.view.visible { display: block; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .page-body { padding: 16px; }
+  .two-col { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .providers-grid { grid-template-columns: 1fr; }
+  .pipeline-row { gap: 0; flex-wrap: nowrap; overflow-x: auto; }
+  .pipeline-step { min-width: 60px; }
+  .pipeline-line { min-width: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>UpWork</h1>
+      <p>Outsource tasks your agent can't handle</p>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Workspace</div>
+      <div class="sidebar-item active" onclick="showView('launch')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        New Job
+      </div>
+      <div class="sidebar-item" onclick="showView('job')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showView('providers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Providers
+      </div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Escrow
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Settings</div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg>
+        Configuration
+      </div>
+      <div class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        MCP Registry
+      </div>
+    </div>
+
+    <div class="sidebar-status">
+      <div class="sidebar-status-row">
+        <span class="sidebar-status-label"><span class="sidebar-status-dot"></span>Network</span>
+        <span class="sidebar-status-value">Plasma Testnet</span>
+      </div>
+      <div class="sidebar-status-row">
+        <span class="sidebar-status-label">Contract</span>
+        <span class="sidebar-status-value">0xbdE8...b111b</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <div class="page-header">
+      <h2 id="page-title">New Job</h2>
+      <div class="page-header-meta">
+        <span class="pill pill-green" id="header-pill" style="display:none"><span class="pill-dot"></span> Complete</span>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <span class="label-light">Light</span>
+          <span class="label-dark">Dark</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ==================== LAUNCH VIEW ==================== -->
+      <div class="view visible" id="view-launch">
+
+        <!-- Pipeline (idle state) -->
+        <div class="pipeline-hero">
+          <div class="pipeline-row" id="pipeline-launch">
+            <div class="pipeline-step">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+              </div>
+              <span class="pipeline-step-label">Bidding</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              </div>
+              <span class="pipeline-step-label">Paying</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <span class="pipeline-step-label">Delivering</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span class="pipeline-step-label">Judging</span>
+            </div>
+            <div class="pipeline-line"></div>
+            <div class="pipeline-step">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <span class="pipeline-step-label">Complete</span>
+            </div>
+          </div>
+          <div class="pipeline-status">
+            <span class="pipeline-status-text" id="pipeline-status-text">Submit a job to start the workflow</span>
+          </div>
+        </div>
+
+        <!-- Job Launch Form -->
+        <div class="section" style="animation-delay:0.06s">
+          <div class="form-card">
+            <div class="form-title">Post a New Job</div>
+            <div class="form-subtitle">Describe your task and set a budget. Providers will bid automatically.</div>
+
+            <div class="form-grid">
+              <div class="form-group full">
+                <label class="form-label">Task Description</label>
+                <textarea class="form-textarea" id="job-desc" placeholder="e.g. Buy milk and eggs and bread from Instacart" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Budget</label>
+                <div class="form-suffix">
+                  <input class="form-input" id="job-budget" type="number" step="0.001" min="0.001" placeholder="0.01">
+                  <span class="form-suffix-label">XPL</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Job Type</label>
+                <select class="form-select" id="job-type">
+                  <option value="shopping">Shopping</option>
+                  <option value="text">Text</option>
+                  <option value="browser">Browser</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" id="btn-launch" onclick="launchJob()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Launch Job
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PROVIDERS VIEW ==================== -->
+      <div class="view" id="view-providers">
+        <div class="section" style="animation-delay:.04s">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+            <div style="display:flex;align-items:center">
+              <div style="font-size:1rem;font-weight:600">Available Providers</div>
+              <span class="provider-count" id="provider-count">0</span>
+            </div>
+            <button class="btn btn-ghost" onclick="loadProviders()" id="btn-refresh-providers">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="providers-toolbar">
+            <input class="form-input" type="text" id="provider-search" placeholder="Search providers..." oninput="filterProviders()">
+            <select class="form-select" id="provider-source-filter" onchange="filterProviders()">
+              <option value="all">All Sources</option>
+              <option value="local">Local</option>
+              <option value="mcp">MCP</option>
+              <option value="smithery">Smithery</option>
+            </select>
+          </div>
+          <div id="providers-loading" style="display:none;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite;margin-bottom:8px;display:inline-block"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+            <div>Discovering providers...</div>
+          </div>
+          <div id="providers-grid" class="providers-grid"></div>
+        </div>
+      </div>
+
+      <!-- ==================== JOB VIEW (dynamic, populated via SSE) ==================== -->
+      <div class="view" id="view-job">
+
+        <!-- Pipeline -->
+        <div class="pipeline-hero">
+          <div class="pipeline-row" id="pipeline-job">
+            <div class="pipeline-step" data-step="0">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+              </div>
+              <span class="pipeline-step-label">Bidding</span>
+            </div>
+            <div class="pipeline-line" data-line="0"></div>
+            <div class="pipeline-step" data-step="1">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              </div>
+              <span class="pipeline-step-label">Paying</span>
+            </div>
+            <div class="pipeline-line" data-line="1"></div>
+            <div class="pipeline-step" data-step="2">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <span class="pipeline-step-label">Delivering</span>
+            </div>
+            <div class="pipeline-line" data-line="2"></div>
+            <div class="pipeline-step" data-step="3">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <span class="pipeline-step-label">Judging</span>
+            </div>
+            <div class="pipeline-line" data-line="3"></div>
+            <div class="pipeline-step" data-step="4">
+              <div class="pipeline-icon">
+                <svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <span class="pipeline-step-label">Complete</span>
+            </div>
+          </div>
+          <div class="pipeline-status" id="pipeline-job-status">
+            <span class="pipeline-status-text">Waiting for events...</span>
+          </div>
+        </div>
+
+        <!-- Phase Spotlight (dynamic) -->
+        <div id="phase-spotlight" style="display:none"></div>
+
+        <!-- Job Details -->
+        <div class="section" style="animation-delay:.06s">
+          <div class="section-label">Job Details</div>
+          <div class="kv-grid" style="grid-template-columns: 2fr 1fr 1fr 1fr;">
+            <div class="kv-item">
+              <div class="kv-label">Description</div>
+              <div class="kv-value" id="kv-desc">&mdash;</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Budget</div>
+              <div class="kv-value mono" id="kv-budget">&mdash;</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Type</div>
+              <div class="kv-value" id="kv-type">&mdash;</div>
+            </div>
+            <div class="kv-item">
+              <div class="kv-label">Final Price</div>
+              <div class="kv-value mono green" id="kv-price">&mdash;</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bids -->
+        <div class="section" style="animation-delay:.1s">
+          <div class="section-label">Provider Bids <span class="pill pill-muted" style="margin-left:4px" id="bids-count">0</span></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Provider</th><th>Price</th><th>Source</th><th>Status</th></tr></thead>
+              <tbody id="bids-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Escrow + Scores -->
+        <div class="section" style="animation-delay:.14s">
+          <div class="two-col">
+            <div>
+              <div class="section-label" style="margin-bottom:12px">Escrow</div>
+              <div class="kv-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="kv-item"><div class="kv-label">Escrow ID</div><div class="kv-value mono" id="escrow-id">&mdash;</div></div>
+                <div class="kv-item"><div class="kv-label">Amount</div><div class="kv-value mono green" id="escrow-amount">&mdash;</div></div>
+                <div class="kv-item"><div class="kv-label">Hold TX</div><div class="kv-value mono" id="escrow-hold-tx">&mdash;</div></div>
+                <div class="kv-item"><div class="kv-label">Release TX</div><div class="kv-value mono" id="escrow-release-tx">&mdash;</div></div>
+              </div>
+            </div>
+            <div>
+              <div class="section-label" style="margin-bottom:12px">Judge Verdict</div>
+              <div class="scores-wrap">
+                <div class="scores-header">
+                  <span class="scores-title">Quality Rubric</span>
+                  <span class="pill pill-muted" id="judge-verdict-pill">Pending</span>
+                </div>
+                <div class="scores-body">
+                  <div class="score-row"><span class="score-name">Completeness</span><div class="bar-track"><div class="bar-fill" id="bar-completeness" style="--w:0%"></div></div><span class="score-val" id="val-completeness">&mdash;</span></div>
+                  <div class="score-row"><span class="score-name">Relevance</span><div class="bar-track"><div class="bar-fill" id="bar-relevance" style="--w:0%"></div></div><span class="score-val" id="val-relevance">&mdash;</span></div>
+                  <div class="score-row"><span class="score-name">Quality</span><div class="bar-track"><div class="bar-fill" id="bar-quality" style="--w:0%"></div></div><span class="score-val" id="val-quality">&mdash;</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work Result -->
+        <div class="section" style="animation-delay:.18s">
+          <div class="section-label" id="work-result-label">Work Result</div>
+          <div id="work-result-container"></div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="section" style="animation-delay:.22s">
+          <div class="section-label">Activity Feed <span class="pill pill-muted" style="margin-left:4px" id="feed-count">0</span></div>
+          <div class="feed-wrap" id="feed-list"></div>
+        </div>
+
+      </div><!-- /view-job -->
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ================================================================
+// Theme
+// ================================================================
+function toggleTheme() {
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// ================================================================
+// Views
+// ================================================================
+let _currentJobId = null;
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('visible'));
+  document.getElementById('view-' + name).classList.add('visible');
+
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  const items = document.querySelectorAll('.sidebar-item');
+  if (name === 'launch') items[0].classList.add('active');
+  else if (name === 'job') items[1].classList.add('active');
+  else if (name === 'providers') items[2].classList.add('active');
+
+  const title = document.getElementById('page-title');
+  const pill = document.getElementById('header-pill');
+  if (name === 'launch') {
+    title.textContent = 'New Job';
+    pill.style.display = 'none';
+  } else if (name === 'providers') {
+    title.textContent = 'Providers';
+    pill.style.display = 'none';
+    loadProviders();
+  } else {
+    title.innerHTML = 'Job <span style="font-family:var(--mono);font-size:0.8rem;color:var(--text-2)">' + (_currentJobId || '') + '</span>';
+    pill.style.display = 'none';
+  }
+
+  document.querySelectorAll('#view-' + name + ' .section').forEach(s => {
+    s.style.animation = 'none';
+    s.offsetHeight;
+    s.style.animation = '';
+  });
+}
+
+// ================================================================
+// API + SSE
+// ================================================================
+const API_BASE = window.location.origin;
+
+async function launchJob() {
+  const desc = document.getElementById('job-desc').value.trim();
+  const budget = document.getElementById('job-budget').value.trim();
+  const type = document.getElementById('job-type').value;
+
+  if (!desc) { document.getElementById('job-desc').focus(); return; }
+  if (!budget || parseFloat(budget) <= 0) { document.getElementById('job-budget').focus(); return; }
+
+  const btn = document.getElementById('btn-launch');
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Launching...';
+
+  // Animate launch pipeline
+  const steps = document.querySelectorAll('#pipeline-launch .pipeline-step');
+  const lines = document.querySelectorAll('#pipeline-launch .pipeline-line');
+  const statusText = document.getElementById('pipeline-status-text');
+  if (steps.length) { steps[0].classList.add('active'); statusText.textContent = 'Submitting...'; }
+
+  try {
+    const resp = await fetch(API_BASE + '/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ description: desc, budget: parseFloat(budget), job_type: type }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(err);
+    }
+
+    const data = await resp.json();
+    _currentJobId = data.job_id;
+
+    // Pre-fill job details from form
+    document.getElementById('kv-desc').textContent = desc;
+    document.getElementById('kv-budget').textContent = parseFloat(budget).toFixed(4) + ' XPL';
+    const typeLabels = { shopping: 'Shopping', text: 'Text', browser: 'Browser' };
+    const typeColors = { shopping: 'pill-amber', text: 'pill-accent', browser: 'pill-cyan' };
+    document.getElementById('kv-type').innerHTML = '<span class="pill ' + (typeColors[type] || 'pill-muted') + '">' + (typeLabels[type] || type) + '</span>';
+
+    // Reset dynamic containers
+    resetJobView();
+
+    // Switch to job view
+    showView('job');
+    connectSSE(data.job_id);
+
+  } catch (e) {
+    alert('Failed to launch job: ' + e.message);
+  } finally {
+    // Reset launch form button
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Launch Job';
+    steps.forEach(s => s.classList.remove('done', 'active'));
+    lines.forEach(l => l.classList.remove('done', 'active'));
+    statusText.textContent = 'Submit a job to start the workflow';
+  }
+}
+
+function resetJobView() {
+  // Pipeline
+  document.querySelectorAll('#pipeline-job .pipeline-step').forEach(s => s.classList.remove('done', 'active', 'failed'));
+  document.querySelectorAll('#pipeline-job .pipeline-line').forEach(l => l.classList.remove('done', 'active'));
+  document.getElementById('pipeline-job-status').innerHTML = '<span class="pipeline-status-text">Waiting for events...</span>';
+
+  // Spotlight
+  document.getElementById('phase-spotlight').style.display = 'none';
+  _spotlightPhase = '';
+
+  // KV
+  document.getElementById('kv-price').textContent = '\u2014';
+  document.getElementById('escrow-id').textContent = '\u2014';
+  document.getElementById('escrow-amount').textContent = '\u2014';
+  document.getElementById('escrow-hold-tx').textContent = '\u2014';
+  document.getElementById('escrow-release-tx').textContent = '\u2014';
+
+  // Bids
+  document.getElementById('bids-tbody').innerHTML = '';
+  document.getElementById('bids-count').textContent = '0';
+
+  // Judge
+  const verdictPill = document.getElementById('judge-verdict-pill');
+  verdictPill.textContent = 'Pending';
+  verdictPill.className = 'pill pill-muted';
+  ['completeness', 'relevance', 'quality'].forEach(k => {
+    const bar = document.getElementById('bar-' + k);
+    bar.style.setProperty('--w', '0%');
+    bar.classList.remove('go');
+    document.getElementById('val-' + k).textContent = '\u2014';
+  });
+
+  // Work result
+  document.getElementById('work-result-label').innerHTML = 'Work Result';
+  document.getElementById('work-result-container').innerHTML = '';
+
+  // Feed
+  document.getElementById('feed-list').innerHTML = '';
+  document.getElementById('feed-count').textContent = '0';
+
+  _lastFeedLength = 0;
+}
+
+// ================================================================
+// SSE connection
+// ================================================================
+let _lastFeedLength = 0;
+
+function connectSSE(jobId) {
+  const es = new EventSource(API_BASE + '/api/jobs/' + jobId + '/stream');
+
+  // Listen for all named events via onmessage won't work — use addEventListener
+  // We listen for specific node names + done/error
+  const nodeNames = [
+    'post_job', 'discover_providers', 'bid_provider', 'close_bidding',
+    'select_provider', 'validate_budget', 'escrow_hold', 'deliver_work',
+    'judge_work', 'escrow_release', 'escrow_refund', 'end_failed',
+  ];
+
+  nodeNames.forEach(name => {
+    es.addEventListener(name, function(e) {
+      const payload = JSON.parse(e.data);
+      handleStateUpdate(payload.node, payload.state);
+    });
+  });
+
+  es.addEventListener('done', function(e) {
+    const payload = JSON.parse(e.data);
+    handleStateUpdate('done', payload.state);
+    es.close();
+
+    // Show header pill
+    const status = payload.state.marketplace_status;
+    const pill = document.getElementById('header-pill');
+    if (status === 'complete') {
+      pill.innerHTML = '<span class="pill-dot"></span> Complete';
+      pill.className = 'pill pill-green';
+      pill.style.display = 'inline-flex';
+    } else if (status === 'failed') {
+      pill.innerHTML = '<span class="pill-dot"></span> Failed';
+      pill.className = 'pill pill-red';
+      pill.style.display = 'inline-flex';
+    }
+  });
+
+  es.addEventListener('error', function(e) {
+    // SSE error event (not the named "error" from backend)
+    if (es.readyState === EventSource.CLOSED) return;
+    try {
+      const payload = JSON.parse(e.data);
+      handleStateUpdate('error', payload.state || {});
+    } catch (_) {}
+    es.close();
+  });
+}
+
+// ================================================================
+// State rendering
+// ================================================================
+function handleStateUpdate(node, state) {
+  if (!state) return;
+
+  // --- Pipeline ---
+  updatePipeline(state.marketplace_status || 'idle');
+
+  // --- Phase spotlight ---
+  updateSpotlight(state.marketplace_status || 'idle', state);
+
+  // --- Job details KV ---
+  if (state.job_description) document.getElementById('kv-desc').textContent = state.job_description;
+  if (state.job_budget_xpl != null) document.getElementById('kv-budget').textContent = state.job_budget_xpl.toFixed(4) + ' XPL';
+  if (state.job_type) {
+    const labels = { shopping: 'Shopping', text: 'Text', browser: 'Browser' };
+    const colors = { shopping: 'pill-amber', text: 'pill-accent', browser: 'pill-cyan' };
+    document.getElementById('kv-type').innerHTML = '<span class="pill ' + (colors[state.job_type] || 'pill-muted') + '">' + (labels[state.job_type] || state.job_type) + '</span>';
+  }
+  if (state.selected_price > 0) document.getElementById('kv-price').textContent = state.selected_price.toFixed(4) + ' XPL';
+
+  // --- Bids table ---
+  if (state.bids && state.bids.length > 0) {
+    renderBids(state.bids, state.selected_provider);
+  }
+
+  // --- Escrow ---
+  if (state.escrow_id) {
+    const eid = state.escrow_id;
+    document.getElementById('escrow-id').textContent = eid.length > 16 ? eid.slice(0, 10) + '...' + eid.slice(-8) : eid;
+  }
+  if (state.selected_price > 0) document.getElementById('escrow-amount').textContent = state.selected_price.toFixed(4) + ' XPL';
+  if (state.escrow_receipt && state.escrow_receipt.tx_hash) {
+    const h = state.escrow_receipt.tx_hash;
+    document.getElementById('escrow-hold-tx').textContent = h.length > 16 ? h.slice(0, 8) + '...' + h.slice(-8) : h;
+  }
+  if (state.payment_receipt && state.payment_receipt.tx_hash) {
+    const h = state.payment_receipt.tx_hash;
+    document.getElementById('escrow-release-tx').textContent = h.length > 16 ? h.slice(0, 8) + '...' + h.slice(-8) : h;
+  }
+
+  // --- Judge scores ---
+  if (state.judge_scores && Object.keys(state.judge_scores).length > 0) {
+    ['completeness', 'relevance', 'quality'].forEach(k => {
+      const v = state.judge_scores[k];
+      if (v != null) {
+        const pct = Math.round(v * 100);
+        const bar = document.getElementById('bar-' + k);
+        bar.style.setProperty('--w', pct + '%');
+        setTimeout(() => bar.classList.add('go'), 50);
+        document.getElementById('val-' + k).textContent = v.toFixed(1);
+      }
+    });
+  }
+  if (state.judge_verdict) {
+    const pill = document.getElementById('judge-verdict-pill');
+    if (state.judge_verdict === 'approved') {
+      pill.textContent = 'Approved';
+      pill.className = 'pill pill-green';
+    } else if (state.judge_verdict === 'rejected') {
+      pill.textContent = 'Rejected';
+      pill.className = 'pill pill-red';
+    }
+  }
+
+  // --- Work result ---
+  if (state.work_result) {
+    renderWorkResult(state.work_result, state.job_type);
+  }
+
+  // --- Activity feed ---
+  if (state.events_log && state.events_log.length > _lastFeedLength) {
+    const newEvents = state.events_log.slice(_lastFeedLength);
+    _lastFeedLength = state.events_log.length;
+    const feedList = document.getElementById('feed-list');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    newEvents.forEach(msg => {
+      const { tag, tagClass, text } = parseFeedMessage(msg);
+      const item = document.createElement('div');
+      item.className = 'feed-item';
+      item.innerHTML =
+        '<span class="feed-time">' + timeStr + '</span>' +
+        '<span class="feed-tag ' + tagClass + '">' + tag + '</span>' +
+        '<span class="feed-msg">' + escapeHtml(text) + '</span>';
+      feedList.appendChild(item);
+      feedList.scrollTop = feedList.scrollHeight;
+    });
+
+    document.getElementById('feed-count').textContent = state.events_log.length;
+  }
+}
+
+// ================================================================
+// Pipeline status mapping
+// ================================================================
+const STATUS_STEP_MAP = {
+  idle:       { active: -1, done: -1 },
+  bidding:    { active: 0,  done: -1 },
+  paying:     { active: 1,  done: 0 },
+  delivering: { active: 2,  done: 1 },
+  judging:    { active: 3,  done: 2 },
+  complete:   { active: -1, done: 4 },
+  failed:     { active: -1, done: -1 },
+};
+
+function updatePipeline(status) {
+  const mapping = STATUS_STEP_MAP[status] || STATUS_STEP_MAP.idle;
+  const steps = document.querySelectorAll('#pipeline-job .pipeline-step');
+  const lines = document.querySelectorAll('#pipeline-job .pipeline-line');
+  const statusBar = document.getElementById('pipeline-job-status');
+
+  steps.forEach((step, i) => {
+    step.classList.remove('done', 'active', 'failed');
+    if (i <= mapping.done) {
+      step.classList.add('done');
+    } else if (i === mapping.active) {
+      step.classList.add('active');
+    }
+  });
+
+  lines.forEach((line, i) => {
+    line.classList.remove('done', 'active');
+    if (i < mapping.done || (mapping.done >= 4 && i <= 3)) {
+      line.classList.add('done');
+    } else if (i === mapping.done && mapping.active > mapping.done) {
+      line.classList.add('active');
+    }
+  });
+
+  // Handle failed status: mark the furthest-reached step as failed
+  if (status === 'failed') {
+    // Find the last done step and mark the next one as failed
+    let lastDone = -1;
+    steps.forEach((s, i) => { if (s.classList.contains('done')) lastDone = i; });
+    const failIdx = lastDone + 1;
+    if (failIdx < steps.length) steps[failIdx].classList.add('failed');
+  }
+
+  // Status bar text
+  const statusLabels = {
+    idle: 'Waiting...',
+    bidding: 'Collecting bids from providers...',
+    paying: 'Processing escrow payment...',
+    delivering: 'Provider is working on the task...',
+    judging: 'Judge is evaluating the work...',
+    complete: 'Job complete!',
+    failed: 'Job failed.',
+  };
+
+  if (status === 'complete') {
+    statusBar.innerHTML = '<span class="pill pill-green"><span class="pill-dot"></span> Complete</span><span class="pipeline-status-text">' + (statusLabels[status] || status) + '</span>';
+  } else if (status === 'failed') {
+    statusBar.innerHTML = '<span class="pill pill-red"><span class="pill-dot"></span> Failed</span><span class="pipeline-status-text">' + (statusLabels[status] || status) + '</span>';
+  } else {
+    statusBar.innerHTML = '<span class="pipeline-status-text">' + (statusLabels[status] || status) + '</span>';
+  }
+}
+
+// ================================================================
+// Phase spotlight
+// ================================================================
+let _spotlightPhase = '';
+
+function updateSpotlight(status, state) {
+  const el = document.getElementById('phase-spotlight');
+
+  // Hide for idle / terminal states
+  if (!status || status === 'idle' || status === 'complete' || status === 'failed') {
+    el.style.display = 'none';
+    _spotlightPhase = '';
+    return;
+  }
+
+  let icon, title, body;
+
+  switch (status) {
+    case 'bidding': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>';
+      title = 'Collecting Bids';
+      const bids = state.bids || [];
+      if (bids.length === 0) {
+        body = '<div class="spinner-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><div>Waiting for providers to submit bids...</div></div>';
+      } else {
+        let rows = '';
+        bids.forEach((bid, i) => {
+          const name = bid.provider_name || 'Unknown';
+          const init = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+          const cls = ['avatar-ba','avatar-cl','avatar-g4'][i % 3];
+          const selected = name === state.selected_provider;
+          rows += '<tr' + (selected ? ' class="winner"' : '') + '>' +
+            '<td><div class="provider-cell"><div class="avatar ' + cls + '">' + escapeHtml(init) + '</div> ' + escapeHtml(name) + '</div></td>' +
+            '<td><span class="mono-cell">' + bid.price_xpl.toFixed(4) + ' XPL</span></td>' +
+            '<td><span class="pill pill-muted">' + escapeHtml(bid.source || 'Local') + '</span></td>' +
+            '<td>' + (selected
+              ? '<span class="status-winner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Selected</span>'
+              : '<span class="status-outbid">' + (state.selected_provider ? 'Outbid' : 'Bidding') + '</span>') +
+            '</td></tr>';
+        });
+        body = '<div class="table-wrap"><table><thead><tr><th>Provider</th><th>Price</th><th>Source</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      }
+      break;
+    }
+    case 'paying': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>';
+      title = 'Processing Payment';
+      const eid = state.escrow_id || '';
+      const eidStr = eid ? (eid.length > 16 ? eid.slice(0,10) + '\u2026' + eid.slice(-8) : eid) : '\u2014';
+      const amt = state.selected_price > 0 ? state.selected_price.toFixed(4) + ' XPL' : '\u2014';
+      const htx = (state.escrow_receipt && state.escrow_receipt.tx_hash) || '';
+      const htxStr = htx ? (htx.length > 16 ? htx.slice(0,8) + '\u2026' + htx.slice(-8) : htx) : '\u2014';
+      body = '<div class="kv-grid" style="grid-template-columns:1fr 1fr 1fr">' +
+        '<div class="kv-item"><div class="kv-label">Escrow ID</div><div class="kv-value mono">' + escapeHtml(eidStr) + '</div></div>' +
+        '<div class="kv-item"><div class="kv-label">Amount</div><div class="kv-value mono green">' + escapeHtml(amt) + '</div></div>' +
+        '<div class="kv-item"><div class="kv-label">Hold TX</div><div class="kv-value mono">' + escapeHtml(htxStr) + '</div></div>' +
+        '</div>';
+      break;
+    }
+    case 'delivering': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      title = 'Work in Progress';
+      if (state.work_result) {
+        const raw = typeof state.work_result === 'string' ? state.work_result : JSON.stringify(state.work_result);
+        const preview = raw.replace(/\s*\[Simple judge:[^\]]*\]\s*$/g, '').trim().slice(0, 300);
+        body = '<div style="padding:8px 0;font-size:0.85rem;color:var(--text-1);white-space:pre-wrap;line-height:1.6">' + escapeHtml(preview) + (raw.length > 300 ? '\u2026' : '') + '</div>';
+      } else {
+        body = '<div class="spinner-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:20px;height:20px;animation:spin 1s linear infinite"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><div>Provider is executing the task...</div></div>';
+      }
+      break;
+    }
+    case 'judging': {
+      icon = '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+      title = 'Evaluating Quality';
+      const scores = state.judge_scores || {};
+      const verdict = state.judge_verdict || '';
+      let vpill = '<span class="pill pill-muted">Pending</span>';
+      if (verdict === 'approved') vpill = '<span class="pill pill-green">Approved</span>';
+      else if (verdict === 'rejected') vpill = '<span class="pill pill-red">Rejected</span>';
+
+      let bars = '';
+      ['completeness','relevance','quality'].forEach(k => {
+        const v = scores[k];
+        const pct = v != null ? Math.round(v * 100) : 0;
+        const val = v != null ? v.toFixed(1) : '\u2014';
+        bars += '<div class="score-row"><span class="score-name">' + k.charAt(0).toUpperCase() + k.slice(1) + '</span>' +
+          '<div class="bar-track"><div class="bar-fill' + (v != null ? ' go' : '') + '" style="--w:' + pct + '%"></div></div>' +
+          '<span class="score-val">' + val + '</span></div>';
+      });
+
+      body = '<div class="scores-wrap"><div class="scores-header"><span class="scores-title">Quality Rubric</span>' + vpill + '</div><div class="scores-body">' + bars + '</div></div>';
+      break;
+    }
+    default:
+      el.style.display = 'none';
+      _spotlightPhase = '';
+      return;
+  }
+
+  // Re-trigger animation when phase changes
+  if (_spotlightPhase !== status) {
+    el.style.display = 'none';
+    el.offsetHeight; // force reflow
+    _spotlightPhase = status;
+  }
+
+  el.style.display = '';
+  el.innerHTML =
+    '<div class="spotlight-header">' +
+      '<div class="spotlight-phase-icon">' + icon + '</div>' +
+      '<div class="spotlight-phase-title">' + title + '</div>' +
+      '<div class="spotlight-phase-status"><span class="pill pill-accent"><span class="pill-dot" style="animation:blink 2.5s ease-in-out infinite"></span> Active</span></div>' +
+    '</div>' +
+    '<div class="spotlight-body">' + body + '</div>';
+}
+
+// ================================================================
+// Bids table
+// ================================================================
+const AVATAR_COLORS = ['avatar-ba', 'avatar-cl', 'avatar-g4'];
+
+function renderBids(bids, selectedProvider) {
+  const tbody = document.getElementById('bids-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('bids-count').textContent = bids.length;
+
+  bids.forEach((bid, i) => {
+    const name = bid.provider_name || 'Unknown';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const isWinner = name === selectedProvider;
+    const avatarClass = AVATAR_COLORS[i % AVATAR_COLORS.length];
+    const source = bid.source || 'Local';
+
+    const tr = document.createElement('tr');
+    if (isWinner) tr.classList.add('winner');
+    tr.innerHTML =
+      '<td><div class="provider-cell"><div class="avatar ' + avatarClass + '">' + escapeHtml(initials) + '</div> ' + escapeHtml(name) + '</div></td>' +
+      '<td><span class="mono-cell">' + bid.price_xpl.toFixed(4) + ' XPL</span></td>' +
+      '<td><span class="pill pill-muted">' + escapeHtml(source) + '</span></td>' +
+      '<td>' + (isWinner
+        ? '<span class="status-winner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg> Selected</span>'
+        : '<span class="status-outbid">' + (selectedProvider ? 'Outbid' : 'Bidding') + '</span>')
+      + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// ================================================================
+// Work result rendering
+// ================================================================
+function renderWorkResult(result, jobType) {
+  const container = document.getElementById('work-result-container');
+  const label = document.getElementById('work-result-label');
+
+  // Strip trailing judge commentary like [Simple judge: ...]
+  if (typeof result === 'string') {
+    result = result.replace(/\s*\[Simple judge:[^\]]*\]\s*$/g, '').trim();
+  }
+
+  // Try to parse as shopping cart JSON
+  let cart = null;
+  if (typeof result === 'string') {
+    try {
+      const parsed = JSON.parse(result);
+      if (parsed && (Array.isArray(parsed.items) || Array.isArray(parsed))) {
+        cart = Array.isArray(parsed) ? parsed : parsed.items;
+      }
+    } catch (_) {}
+  }
+
+  if (cart && cart.length > 0) {
+    label.innerHTML = 'Work Result &mdash; Shopping Cart <span class="pill pill-amber" style="margin-left:4px">' + cart.length + ' items</span>';
+    let html = '<div class="cart-wrap">';
+    let total = 0;
+    cart.forEach(item => {
+      const price = parseFloat(item.price) || 0;
+      total += price;
+      html += '<div class="cart-row">' +
+        '<div class="cart-icon">&#x1F6D2;</div>' +
+        '<div class="cart-info"><div class="cart-name">' + escapeHtml(item.name || 'Item') + '</div><div class="cart-detail">' + escapeHtml(item.detail || item.store || '') + '</div></div>' +
+        '<div class="cart-price">$' + price.toFixed(2) + '</div>' +
+        '</div>';
+    });
+    html += '<div class="cart-total"><span class="cart-total-label">Cart Total</span><span class="cart-total-value">$' + total.toFixed(2) + '</span></div>';
+    html += '</div>';
+    container.innerHTML = html;
+  } else {
+    label.innerHTML = 'Work Result';
+    container.innerHTML = '<div class="cart-wrap"><div class="cart-row"><div class="cart-info"><div class="cart-name" style="white-space:pre-wrap">' + escapeHtml(String(result)) + '</div></div></div></div>';
+  }
+}
+
+// ================================================================
+// Feed message parsing
+// ================================================================
+function parseFeedMessage(msg) {
+  // Format: "[TAG] message text"
+  const match = msg.match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (!match) return { tag: 'INFO', tagClass: 't-client', text: msg };
+
+  const rawTag = match[1].toUpperCase();
+  const text = match[2];
+  let tagClass = 't-client';
+
+  if (rawTag.includes('DISCOVERY')) tagClass = 't-discovery';
+  else if (rawTag.includes('ESCROW')) tagClass = 't-escrow';
+  else if (rawTag.includes('JUDGE')) tagClass = 't-judge';
+  else if (rawTag.includes('GUARD') || rawTag.includes('BUDGET')) tagClass = 't-guard';
+  else if (rawTag === 'CLIENT' || rawTag === 'MARKETPLACE') tagClass = 't-client';
+  else tagClass = 't-provider';
+
+  return { tag: rawTag, tagClass, text };
+}
+
+// ================================================================
+// Providers
+// ================================================================
+let _providersLoaded = false;
+let _allProviders = [];
+
+async function loadProviders() {
+  const grid = document.getElementById('providers-grid');
+  const loading = document.getElementById('providers-loading');
+  grid.innerHTML = '';
+  loading.style.display = 'block';
+
+  try {
+    const resp = await fetch(API_BASE + '/api/providers');
+    if (!resp.ok) throw new Error('Failed to fetch providers');
+    const data = await resp.json();
+
+    // Sort: local first, then mcp, then smithery (by use_count desc)
+    const sourceOrder = { local: 0, mcp: 1, smithery: 2 };
+    _allProviders = (data.providers || []).sort((a, b) => {
+      const sa = sourceOrder[a.source] ?? 99;
+      const sb = sourceOrder[b.source] ?? 99;
+      if (sa !== sb) return sa - sb;
+      // Within smithery, sort by use_count descending
+      if (a.source === 'smithery' && b.source === 'smithery') {
+        return (b.use_count || 0) - (a.use_count || 0);
+      }
+      return 0;
+    });
+
+    document.getElementById('provider-count').textContent = _allProviders.length;
+    filterProviders();
+    _providersLoaded = true;
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">Failed to load providers: ' + escapeHtml(e.message) + '</div>';
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function filterProviders() {
+  const query = (document.getElementById('provider-search').value || '').toLowerCase().trim();
+  const source = document.getElementById('provider-source-filter').value;
+
+  let filtered = _allProviders;
+  if (source !== 'all') {
+    filtered = filtered.filter(p => p.source === source);
+  }
+  if (query) {
+    filtered = filtered.filter(p =>
+      (p.name || '').toLowerCase().includes(query) ||
+      (p.description || '').toLowerCase().includes(query) ||
+      (p.qualified_name || '').toLowerCase().includes(query)
+    );
+  }
+  renderProviders(filtered);
+}
+
+function formatUseCount(n) {
+  if (n == null || n === 0) return '';
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+  return String(n);
+}
+
+function renderProviders(list) {
+  const grid = document.getElementById('providers-grid');
+  grid.innerHTML = '';
+
+  if (!list || list.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--text-3);font-size:0.85rem">No providers found</div>';
+    return;
+  }
+
+  list.forEach(p => {
+    const initials = (p.name || '?').split(/[\s\-_\/]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    const isSmithery = p.source === 'smithery';
+    const avatarClass = isSmithery ? 'src-smithery' : (p.source === 'mcp' ? 'src-mcp' : 'src-local');
+
+    // Avatar content: use icon_url if available (any source)
+    let avatarContent = escapeHtml(initials);
+    if (p.icon_url) {
+      avatarContent = '<img src="' + escapeHtml(p.icon_url) + '" alt="" onerror="this.parentElement.textContent=\'' + escapeHtml(initials) + '\'">';
+    }
+
+    // Status pill
+    let statusPill = '';
+    if (p.status === 'connected') statusPill = '<span class="pill pill-green"><span class="pill-dot"></span> Connected</span>';
+    else if (p.status === 'built-in') statusPill = '<span class="pill pill-accent"><span class="pill-dot"></span> Built-in</span>';
+    else if (p.status === 'unreachable') statusPill = '<span class="pill pill-red"><span class="pill-dot"></span> Unreachable</span>';
+    else if (p.status === 'registry') statusPill = '<span class="pill pill-smithery"><span class="pill-dot"></span> Registry</span>';
+    else statusPill = '<span class="pill pill-muted">' + escapeHtml(p.status || 'Unknown') + '</span>';
+
+    // Source pill
+    let sourcePill = '';
+    if (p.source === 'mcp') sourcePill = '<span class="pill pill-cyan">MCP</span>';
+    else if (isSmithery) sourcePill = '<span class="pill pill-smithery">Smithery</span>';
+    else sourcePill = '<span class="pill pill-muted">Local</span>';
+
+    // Description — truncate long ones
+    let desc = p.description || 'No description available.';
+    if (desc.length > 200) desc = desc.slice(0, 200) + '...';
+
+    // Capability pills
+    const capHtml = (p.capabilities || []).map(c =>
+      '<span class="pill pill-muted">' + escapeHtml(c) + '</span>'
+    ).join('');
+
+    // Footer items
+    let footerItems = [];
+
+    // Server key (for non-Smithery)
+    if (!isSmithery && p.server_key) {
+      footerItems.push('<span class="provider-server-key">' + escapeHtml(p.server_key) + '</span>');
+    }
+
+    // Verified badge
+    if (p.verified) {
+      footerItems.push('<span class="verified-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Verified</span>');
+    }
+
+    // Use count
+    const useStr = formatUseCount(p.use_count);
+    if (useStr) {
+      footerItems.push('<span class="use-count">' + useStr + ' uses</span>');
+    }
+
+    // Homepage link
+    if (isSmithery && p.homepage) {
+      footerItems.push('<a href="' + escapeHtml(p.homepage) + '" target="_blank" rel="noopener">smithery.ai <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>');
+    }
+
+    const footerHtml = footerItems.length > 0
+      ? '<div class="provider-card-footer">' + footerItems.join('<span style="flex:1"></span>') + '</div>'
+      : '';
+
+    const card = document.createElement('div');
+    card.className = 'provider-card';
+    card.innerHTML =
+      '<div class="provider-card-header">' +
+        '<div class="provider-avatar ' + avatarClass + '">' + avatarContent + '</div>' +
+        '<div class="provider-card-name">' + escapeHtml(p.name) + '</div>' +
+        '<div class="provider-card-pills">' + statusPill + sourcePill + '</div>' +
+      '</div>' +
+      '<div class="provider-card-desc">' + escapeHtml(desc) + '</div>' +
+      (capHtml ? '<div class="provider-card-caps">' + capHtml + '</div>' : '') +
+      footerHtml;
+
+    grid.appendChild(card);
+  });
+}
+
+// ================================================================
+// Utils
+// ================================================================
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Spinner keyframe
+const styleSheet = document.createElement('style');
+styleSheet.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(styleSheet);
+</script>
+</body>
+</html>

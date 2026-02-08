@@ -71,9 +71,10 @@ class PlasmaEscrowProvider:
 
     @staticmethod
     def generate_escrow_id(job_description: str, provider_address: str) -> bytes:
-        """Deterministic escrow ID from job + provider."""
+        """Unique escrow ID from job + provider + timestamp."""
+        import time
         return Web3.keccak(
-            text=f"{job_description}:{provider_address}"
+            text=f"{job_description}:{provider_address}:{time.time()}"
         )
 
     def deposit(
@@ -105,7 +106,7 @@ class PlasmaEscrowProvider:
             "tx_hash": tx_hash.hex(),
             "from_addr": self.client_account.address,
             "to_addr": self.contract_address,
-            "amount_usdc": amount_xpl,
+            "amount_xpl": amount_xpl,
             "chain": f"plasma-testnet (chainId={PLASMA_CHAIN_ID})",
         }
 
@@ -132,7 +133,7 @@ class PlasmaEscrowProvider:
             "tx_hash": tx_hash.hex(),
             "from_addr": self.contract_address,
             "to_addr": "provider",
-            "amount_usdc": 0.0,
+            "amount_xpl": 0.0,
             "chain": f"plasma-testnet (chainId={PLASMA_CHAIN_ID})",
         }
 
@@ -159,7 +160,7 @@ class PlasmaEscrowProvider:
             "tx_hash": tx_hash.hex(),
             "from_addr": self.contract_address,
             "to_addr": self.client_account.address,
-            "amount_usdc": 0.0,
+            "amount_xpl": 0.0,
             "chain": f"plasma-testnet (chainId={PLASMA_CHAIN_ID})",
         }
 

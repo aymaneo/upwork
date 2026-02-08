@@ -8,9 +8,12 @@ from rich.console import Console
 from rich.live import Live
 from rich.prompt import Prompt, FloatPrompt
 
-from agent_marketplace.config import STEP_DELAY
+from pathlib import Path
+
+from agent_marketplace.config import MCP_ENABLED, MCP_REGISTRY_PATH, STEP_DELAY
 from agent_marketplace.display.panels import build_layout
 from agent_marketplace.graph import build_graph, set_payment_provider
+from agent_marketplace.mcp.registry import load_registry
 from agent_marketplace.payments.plasma import PlasmaEscrowProvider
 from agent_marketplace.state import MarketplaceState
 
@@ -24,8 +27,8 @@ def _get_payment_provider() -> PlasmaEscrowProvider:
 
 def main() -> None:
     """Run the marketplace demo."""
-    console.print("\n[bold blue]Agent Compute Marketplace[/bold blue]")
-    console.print("[dim]AI agents hiring & paying each other on Plasma[/dim]\n")
+    console.print("\n[bold blue]Agent Task Marketplace[/bold blue]")
+    console.print("[dim]Outsource tasks your agent can't handle — settled on-chain[/dim]\n")
 
     # Setup
     provider = _get_payment_provider()
@@ -36,34 +39,41 @@ def main() -> None:
 
     # Prompt user for job details
     job_description = Prompt.ask(
-        "[bold cyan]Describe the job for agents[/bold cyan]",
+        "[bold cyan]What task does your agent need help with?[/bold cyan]",
         default="Summarize the key innovations of Plasma blockchain in 3 bullet points",
     )
-    job_budget_usdc = FloatPrompt.ask(
+    job_budget_xpl = FloatPrompt.ask(
         "[bold cyan]Budget in XPL[/bold cyan]",
         default=0.01,
     )
     console.print()
 
+    # Load MCP registry
+    registry = load_registry(Path(MCP_REGISTRY_PATH)) if MCP_ENABLED else {}
+
     # Initial state
     initial_state: MarketplaceState = {
         "job_description": job_description,
-        "job_budget_usdc": job_budget_usdc,
+        "job_budget_xpl": job_budget_xpl,
         "bids": [],
         "selected_provider": "",
         "selected_price": 0.0,
         "budget_valid": False,
-        "payment_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
+        "payment_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_xpl": 0.0, "chain": ""},
         "payment_status": "pending",
         "escrow_id": "",
         "escrow_status": "pending",
-        "escrow_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_usdc": 0.0, "chain": ""},
+        "escrow_receipt": {"tx_hash": "", "from_addr": "", "to_addr": "", "amount_xpl": 0.0, "chain": ""},
+        "judge_scores": {},
         "judge_verdict": "",
         "judge_reasoning": "",
         "work_result": "",
         "job_type": "text",
         "marketplace_status": "idle",
         "events_log": [],
+        "discovered_providers": [],
+        "mcp_provider_map": {},
+        "mcp_registry": registry,
     }
 
     # Merge updates from stream into running state
@@ -72,7 +82,7 @@ def main() -> None:
     console.print(f"[green]Network:[/green] Plasma Testnet")
     console.print(f"[green]Contract:[/green] {provider.contract_address}")
     console.print(f"[green]Job:[/green] {initial_state['job_description']}")
-    console.print(f"[green]Budget:[/green] {initial_state['job_budget_usdc']:.4f} XPL")
+    console.print(f"[green]Budget:[/green] {initial_state['job_budget_xpl']:.4f} XPL")
     console.print()
 
     with Live(build_layout(current_state), console=console, screen=True, refresh_per_second=4) as live:
@@ -107,6 +117,16 @@ def main() -> None:
         console.print(f"[green]Escrow ID:[/green] {current_state.get('escrow_id', 'N/A')}")
         console.print(f"[green]Escrow Hold TX:[/green] {escrow_receipt.get('tx_hash', 'N/A')}")
         console.print(f"[green]Judge Verdict:[/green] {current_state.get('judge_verdict', 'N/A')}")
+        judge_scores = current_state.get("judge_scores", {})
+        if judge_scores:
+            avg = sum(judge_scores.get(k, 0.0) for k in ("completeness", "relevance", "quality")) / 3
+            console.print(
+                f"[green]Rubric Scores:[/green] "
+                f"Completeness={judge_scores.get('completeness', 0.0):.1f}  "
+                f"Relevance={judge_scores.get('relevance', 0.0):.1f}  "
+                f"Quality={judge_scores.get('quality', 0.0):.1f}  "
+                f"(avg: {avg:.2f})"
+            )
         console.print(f"[green]Release TX:[/green] {payment_receipt.get('tx_hash', 'N/A')}")
         console.print(f"[green]Chain:[/green] {payment_receipt.get('chain', 'N/A')}")
         console.print(f"\n[bold]Work Result:[/bold]")
@@ -116,6 +136,23 @@ def main() -> None:
         judge_verdict = current_state.get("judge_verdict", "")
         if judge_verdict:
             console.print(f"[red]Judge Verdict:[/red] {judge_verdict}")
+            judge_scores = current_state.get("judge_scores", {})
+            if judge_scores:
+                avg = sum(judge_scores.get(k, 0.0) for k in ("completeness", "relevance", "quality")) / 3
+                console.print(
+                    f"[red]Rubric Scores:[/red] "
+                    f"Completeness={judge_scores.get('completeness', 0.0):.1f}  "
+                    f"Relevance={judge_scores.get('relevance', 0.0):.1f}  "
+                    f"Quality={judge_scores.get('quality', 0.0):.1f}  "
+                    f"(avg: {avg:.2f})"
+                )
             console.print(f"[red]Reason:[/red] {current_state.get('judge_reasoning', '')}")
+
+        # Print recent events so the failure reason is visible
+        events = current_state.get("events_log", [])
+        if events:
+            console.print(f"\n[bold]Activity log:[/bold]")
+            for event in events[-10:]:
+                console.print(f"  {event}")
 
     console.print()
